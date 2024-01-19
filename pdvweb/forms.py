@@ -60,6 +60,10 @@ class CategoriaForm(forms.ModelForm):
         return nome
 
 class RegistroOperadorForm(UserCreationForm):
+    nome = forms.CharField(max_length=255)
+    email = forms.EmailField()
+    telefone = forms.CharField(max_length=20, required=False)
+
     class Meta:
         model = CustomUser
-        fields = ['username', 'nome', 'email', 'password1', 'password2']
+        fields = ['username', 'nome', 'email', 'telefone', 'password1', 'password2']
