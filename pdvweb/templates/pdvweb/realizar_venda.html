@@ -1,0 +1,128 @@
+{% extends 'pdvweb/base.html' %}
+
+{% block title %}Realizar Venda{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Realizar Venda</h2>
+
+    {% if mensagem_sucesso %}
+        <div class="alert alert-success">
+            {{ mensagem_sucesso }}
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'pdvweb:realizar_venda' %}">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    {{ form.produto.label_tag }}
+                    {{ form.produto }}
+                    {% if form.produto.errors %}
+                        <small class="form-text text-danger">{{ form.produto.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    {{ form.quantidade.label_tag }}
+                    {{ form.quantidade }}
+                    {% if form.quantidade.errors %}
+                        <small class="form-text text-danger">{{ form.quantidade.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    {{ form.cliente.label_tag }}
+                    {{ form.cliente }}
+                    {% if form.cliente.errors %}
+                        <small class="form-text text-danger">{{ form.cliente.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Adicionar</button>
+            </div>
+        </div>
+    </form>
+
+    <hr class="my-4">
+
+    <h3>Produtos Disponíveis</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Preço Unitário</th>
+                <th>Estoque</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+                <tr>
+                    <td>{{ produto.nome }}</td>
+                    <td>R$ {{ produto.preco }}</td>
+                    <td>{{ produto.estoque }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr class="my-4">
+
+    <h3>Carrinho</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Preço Unitário</th>
+                <th>Subtotal</th>
+                <th>Ação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in carrinho %}
+                <tr>
+                    <td>{{ item.produto.nome }}</td>
+                    <td>{{ item.quantidade }}</td>
+                    <td>R$ {{ item.produto.preco }}</td>
+                    <td>R$ {{ item.quantidade * item.produto.preco }}</td>
+                    <td>
+                        <a href="{% url 'pdvweb:remover_item_carrinho' item.produto.id %}" class="btn btn-danger btn-sm">
+                            Remover
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="desconto">Desconto (R$)</label>
+                <input type="number" name="desconto" id="desconto" class="form-control" min="0" step="0.01">
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <a href="{% url 'pdvweb:cancelar_venda' %}" class="btn btn-danger float-right">Cancelar Venda</a>
+        </div>
+    </div>
+
+    <h4 class="mt-4">Total: R$ {{ total_carrinho }}</h4>
+
+    {% if carrinho %}
+        <a href="{% url 'pdvweb:finalizar_venda' %}" class="btn btn-success">Finalizar Venda</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!-- templates/pdvweb/carrinho.html -->
+
+{% extends 'pdvweb/base.html' %}
+
+{% block content %}
+  <h2>Carrinho de Compras</h2>
+  <ul>
+    {% for item in carrinho %}
+      <li>{{ item.produto.nome }} - Quantidade: {{ item.quantidade }}</li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="{% url 'carrinho' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Adicionar ao Carrinho</button>
+  </form>
+{% endblock %}

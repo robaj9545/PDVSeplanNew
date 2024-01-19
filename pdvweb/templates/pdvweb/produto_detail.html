@@ -1,0 +1,12 @@
+{% extends 'pdvweb/base.html' %}
+
+{% block title %}Detalhes do Produto{% endblock %}
+
+{% block content %}
+    <h2>{{ produto.nome }}</h2>
+    <p><strong>Preço:</strong> R$ {{ produto.preco }}</p>
+    <p><strong>Categoria:</strong> {{ produto.categoria.nome }}</p>
+    <p><strong>Estoque:</strong> {{ produto.estoque }}</p>
+    <a href="{% url 'pdvweb:editar_produto' produto.id %}" class="btn btn-primary">Editar Produto</a>
+    <a href="{% url 'pdvweb:listar_produtos' %}" class="btn btn-secondary">Voltar para Lista de Produtos</a>
+{% endblock %}

@@ -1,0 +1,15 @@
+<!-- templates/pdvweb/finalizar_venda.html -->
+
+{% extends 'pdvweb/base.html' %}
+
+{% block content %}
+  <h2>Finalizar Venda</h2>
+  <p>Total da Venda: R${{ venda.calcular_valor_total }}</p>
+  <h3>Itens da Venda:</h3>
+  <ul>
+    {% for item in venda.itens_venda.all %}
+      <li>{{ item.produto.nome }} - Quantidade: {{ item.quantidade }}</li>
+    {% endfor %}
+  </ul>
+  <!-- Adicione mais detalhes da venda conforme necessário -->
+{% endblock %}

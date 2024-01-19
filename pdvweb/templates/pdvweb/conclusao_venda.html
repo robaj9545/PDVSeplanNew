@@ -1,0 +1,24 @@
+<!-- pdvweb/templates/pdvweb/conclusao_venda.html -->
+
+{% extends 'pdvweb/base_generic.html' %}
+
+{% block content %}
+  <h2>Conclusão da Venda</h2>
+  
+  <p>A venda foi concluída com sucesso!</p>
+  
+  <h3>Detalhes da Venda</h3>
+  <p>ID da Venda: {{ venda.id }}</p>
+  <p>Data da Venda: {{ venda.data_venda }}</p>
+  
+  <h3>Itens da Venda</h3>
+  <ul>
+    {% for item in venda.itens_venda.all %}
+      <li>{{ item.produto.nome }} - Quantidade: {{ item.quantidade }} - Subtotal: R$ {{ item.subtotal|floatformat:2 }}</li>
+    {% endfor %}
+  </ul>
+  
+  <p>Total da Venda: R$ {{ venda.total|floatformat:2 }}</p>
+  
+  <p>Obrigado por sua compra!</p>
+{% endblock %}

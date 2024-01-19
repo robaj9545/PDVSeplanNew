@@ -1,0 +1,12 @@
+{% extends 'pdvweb/base.html' %}
+
+{% block title %}Registrar Operador{% endblock %}
+
+{% block content %}
+    <h2>Registrar Operador</h2>
+    <form method="post" action="{% url 'pdvweb:registrar_operador' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Registrar</button>
+    </form>
+{% endblock %}
