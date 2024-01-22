@@ -1,20 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <title>{% block title %}Meu PDV Web{% endblock %}</title>
 </head>
+
 <body>
 
-<div class="container mt-4">
-    {% block content %}{% endblock %}
-</div>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                {% if user.is_authenticated %}
+                <div class="float-right mx-2">
+                    <p class="d-inline-block">Bem-vindo, {{ user.username }}!</p>
+                    {% if user.operador %}
+                    <span class="badge badge-primary ml-2">Operador</span>
+                    {% endif %}
+                    <!-- Adicione o botão de logout aqui -->
+                    <a href="{% url 'pdvweb:logout_view' %}" class="btn btn-outline-danger ml-2">Logout</a>
+                </div>
+                {% else %}
+                <!-- Se o usuário não está autenticado, exibe o botão de login -->
+                <a href="{% url 'pdvweb:login_operador' %}" class="btn btn-primary float-right">Login</a>
+                {% endif %}
+            </div>
+        </div>
 
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
 </body>
+
 </html>

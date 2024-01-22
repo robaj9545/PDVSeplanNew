@@ -1,0 +1,47 @@
+{% extends 'pdvweb/base.html' %}
+
+{% block title %}Operador Dashboard{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Bem-vindo ao Operador Dashboard</h1>
+    <p class="lead">Gerencie suas operações de operador de forma eficiente!</p>
+    <hr class="my-4">
+    <p>Escolha uma opção abaixo para começar:</p>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Lista de Produtos</h5>
+                    <p class="card-text">Consulte e edite a lista de produtos disponíveis.</p>
+                    <a href="{% url 'pdvweb:listar_produtos' %}" class="btn btn-primary">Ir para Lista de Produtos</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Histórico de Vendas</h5>
+                    <p class="card-text">Veja o histórico de todas as vendas realizadas.</p>
+                    <a href="{% url 'pdvweb:historico_vendas' %}" class="btn btn-primary">Ir para Histórico de
+                        Vendas</a>
+                </div>
+            </div>
+        </div>
+
+        {% if user.operador %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Realizar Venda</h5>
+                    <p class="card-text">Inicie uma nova venda e adicione produtos ao carrinho.</p>
+                    <a href="{% url 'pdvweb:realizar_venda' %}" class="btn btn-primary">Iniciar Venda</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

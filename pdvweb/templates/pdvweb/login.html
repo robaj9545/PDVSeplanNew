@@ -1,13 +1,35 @@
 {% extends 'pdvweb/base.html' %}
+{% load bootstrap4 %}
+
+
 
 {% block title %}Login{% endblock %}
 
 {% block content %}
-  <h2>Login</h2>
-  <form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-  </form>
-  <p>Não tem uma conta? <a href="{% url 'pdvweb:registrar_operador' %}">Registre-se</a></p>
+<h2>Login</h2>
+<form method="post" action="{% url 'pdvweb:login_operador' %}?next={{ request.GET.next }}">
+  {% csrf_token %}
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+  {{ form.as_p }}
+  <button type="submit">Login</button>
+</form>
+
+{% if not user.is_authenticated %}
+<p>Não tem uma conta? <a href="{% url 'pdvweb:registrar_operador' %}">Registre-se</a></p>
+{% endif %}
+
+{% if request.GET.next and user.is_authenticated %}
+<p>Logado com sucesso! Redirecionando...</p>
+<script>
+  setTimeout(function () {
+    window.location.href = "{{ request.GET.next }}";
+  }, 2000);  <!-- Redireciona após 2 segundos -->
+</script>
+{% endif %}
 {% endblock %}

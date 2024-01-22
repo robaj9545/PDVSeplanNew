@@ -1,2 +1,16 @@
+
+MIGRACOES
 python manage.py makemigrations pdvweb
 python manage.py migrate pdvweb
+
+todo projeto
+python manage.py makemigrations
+python manage.py migrate
+
+ATIVAR MAQUINA VIRTUAL
+venv\Scripts\activate
+deactivate
+
+EXTRAIR REQUERIMENTOS DO PROJETO
+pip freeze > requirements.txt
+

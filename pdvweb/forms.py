@@ -1,8 +1,10 @@
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import AbstractUser
-from .models import ItemVenda, Produto, Venda, Categoria, Cliente, CustomUser
+# forms.py
 
+from django import forms
+from django.contrib.auth.models import AbstractUser, Group
+from .models import ItemVenda, Produto, Venda, Categoria, CustomUser, Operador
+from .models import CustomUser
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 
 class ItemVendaForm(forms.ModelForm):
@@ -13,6 +15,7 @@ class ItemVendaForm(forms.ModelForm):
             'produto': forms.Select(attrs={'class': 'form-control'}),
             'quantidade': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
+
 
 class ProdutoForm(forms.ModelForm):
     class Meta:
@@ -32,12 +35,12 @@ class ProdutoForm(forms.ModelForm):
             raise forms.ValidationError("O preço não pode ser negativo.")
         return preco
 
+
 class VendaForm(forms.ModelForm):
     class Meta:
         model = Venda
-        fields = ['cliente', 'produtos', 'desconto']
+        fields = ['produtos', 'desconto']
         widgets = {
-            'cliente': forms.Select(attrs={'class': 'form-control'}),
             'produtos': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'desconto': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
         }
@@ -45,6 +48,7 @@ class VendaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['produtos'].queryset = Produto.objects.all()
+
 
 class CategoriaForm(forms.ModelForm):
     class Meta:
@@ -59,11 +63,46 @@ class CategoriaForm(forms.ModelForm):
         # Adicione lógica de validação/sanitização conforme necessário
         return nome
 
+
+
 class RegistroOperadorForm(UserCreationForm):
-    nome = forms.CharField(max_length=255)
-    email = forms.EmailField()
-    telefone = forms.CharField(max_length=20, required=False)
+    criar_operador = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'nome', 'email', 'telefone', 'password1', 'password2']
+        fields = UserCreationForm.Meta.fields + ('nome', 'telefone', 'criar_operador')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data['criar_operador']:
+            operador = Operador(nome=user.nome, email=user.email, telefone=user.telefone)
+            operador.save()
+            operador.usuarios.add(user)
+            user.operador = operador
+        if commit:
+            user.save()
+        return user
+
+
+class LoginOperadorForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Adicione as mensagens de erro personalizadas aqui, se necessário
+        self.fields['username'].error_messages = {
+            'required': 'Por favor, insira seu nome de usuário.',
+            'invalid': 'Nome de usuário inválido.',
+        }
+        self.fields['password'].error_messages = {
+            'required': 'Por favor, insira sua senha.',
+            'invalid_login': 'Credenciais inválidas. Por favor, tente novamente.',
+            'inactive': 'Sua conta está inativa. Entre em contato com o suporte.',
+        }
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'password']

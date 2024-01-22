@@ -7,9 +7,9 @@
     <h2>Realizar Venda</h2>
 
     {% if mensagem_sucesso %}
-        <div class="alert alert-success">
-            {{ mensagem_sucesso }}
-        </div>
+    <div class="alert alert-success">
+        {{ mensagem_sucesso }}
+    </div>
     {% endif %}
 
     <form method="post" action="{% url 'pdvweb:realizar_venda' %}">
@@ -21,7 +21,7 @@
                     {{ form.produto.label_tag }}
                     {{ form.produto }}
                     {% if form.produto.errors %}
-                        <small class="form-text text-danger">{{ form.produto.errors.0 }}</small>
+                    <small class="form-text text-danger">{{ form.produto.errors.0 }}</small>
                     {% endif %}
                 </div>
             </div>
@@ -31,17 +31,7 @@
                     {{ form.quantidade.label_tag }}
                     {{ form.quantidade }}
                     {% if form.quantidade.errors %}
-                        <small class="form-text text-danger">{{ form.quantidade.errors.0 }}</small>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="form-group">
-                    {{ form.cliente.label_tag }}
-                    {{ form.cliente }}
-                    {% if form.cliente.errors %}
-                        <small class="form-text text-danger">{{ form.cliente.errors.0 }}</small>
+                    <small class="form-text text-danger">{{ form.quantidade.errors.0 }}</small>
                     {% endif %}
                 </div>
             </div>
@@ -67,11 +57,11 @@
         </thead>
         <tbody>
             {% for produto in produtos %}
-                <tr>
-                    <td>{{ produto.nome }}</td>
-                    <td>R$ {{ produto.preco }}</td>
-                    <td>{{ produto.estoque }}</td>
-                </tr>
+            <tr>
+                <td>{{ produto.nome }}</td>
+                <td>R$ {{ produto.preco }}</td>
+                <td>{{ produto.estoque }}</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
@@ -91,17 +81,19 @@
         </thead>
         <tbody>
             {% for item in carrinho %}
-                <tr>
-                    <td>{{ item.produto.nome }}</td>
-                    <td>{{ item.quantidade }}</td>
-                    <td>R$ {{ item.produto.preco }}</td>
-                    <td>R$ {{ item.quantidade * item.produto.preco }}</td>
-                    <td>
-                        <a href="{% url 'pdvweb:remover_item_carrinho' item.produto.id %}" class="btn btn-danger btn-sm">
-                            Remover
-                        </a>
-                    </td>
-                </tr>
+            <tr>
+                <td>{{ item.produto.nome }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>R$ {{ item.produto.preco }}</td>
+                <td>R$ {{ item.subtotal }}</td>
+                <td>
+                    {% if item.produto and item.produto.id %}
+                    <a href="{% url 'pdvweb:remover_item_carrinho' item.produto.id %}" class="btn btn-danger btn-sm">
+                        Remover
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
@@ -115,14 +107,14 @@
         </div>
 
         <div class="col-md-6">
-            <a href="{% url 'pdvweb:cancelar_venda' %}" class="btn btn-danger float-right">Cancelar Venda</a>
+            <a href="{% url 'pdvweb:cancelar_venda' %}" class="btn btn-danger">Cancelar Venda</a>
         </div>
     </div>
 
     <h4 class="mt-4">Total: R$ {{ total_carrinho }}</h4>
 
     {% if carrinho %}
-        <a href="{% url 'pdvweb:finalizar_venda' %}" class="btn btn-success">Finalizar Venda</a>
+    <a href="{% url 'pdvweb:finalizar_venda' %}" class="btn btn-success">Finalizar Venda</a>
     {% endif %}
 </div>
 {% endblock %}
