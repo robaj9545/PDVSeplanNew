@@ -1,10 +1,11 @@
-#models.py
+# models.py
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.db import transaction
 from django.utils import timezone
+from decimal import Decimal
 
 
 class Categoria(models.Model):
@@ -18,7 +19,8 @@ class Operador(models.Model):
     nome = models.CharField(max_length=255)
     email = models.EmailField()
     telefone = models.CharField(max_length=20, blank=True, null=True)
-    usuarios = models.ManyToManyField('CustomUser', related_name='operadores', blank=True)
+    usuarios = models.ManyToManyField(
+        'CustomUser', related_name='operadores', blank=True)
 
     def __str__(self):
         return self.nome
@@ -31,7 +33,10 @@ def default_nome():
 class CustomUser(AbstractUser):
     nome = models.CharField(max_length=255, default=default_nome)
     telefone = models.CharField(max_length=20, blank=True, null=True)
-    operador = models.OneToOneField(Operador, null=True, blank=True, on_delete=models.CASCADE)
+    operador = models.OneToOneField(
+        Operador, null=True, blank=True, on_delete=models.CASCADE)
+    meus_operadores = models.ManyToManyField(
+        Operador, related_name='meus_usuarios', blank=True)
 
     groups = models.ManyToManyField(
         Group,
@@ -48,13 +53,6 @@ class CustomUser(AbstractUser):
         related_name='customuser_set',
         related_query_name='user',
     )
-
-    def save(self, *args, **kwargs):
-        if self.operador and not self.operador.pk:
-            # Se um Operador está associado, mas ainda não foi salvo, salve-o agora
-            self.operador.save()
-
-        super().save(*args, **kwargs)
 
 
 class CustomGroup(models.Model):
@@ -139,14 +137,16 @@ class Venda(models.Model):
 
     @transaction.atomic
     def calcular_valor_total(self):
-        subtotal = self.itens_venda.aggregate(total=models.Sum(
-            models.F('quantidade') * models.F('produto__preco'), output_field=models.DecimalField())).get('total') or 0.0
-        self.valor_total = max(subtotal - self.desconto, 0)
-        self.save()
+        subtotal = self.itens_venda.aggregate(
+            total=models.Sum(models.F(
+                'quantidade') * models.F('produto__preco'), output_field=models.DecimalField())
+        ).get('total') or Decimal('0.0')
 
-    def aplicar_desconto(self, valor_desconto):
-        self.desconto = min(valor_desconto, self.valor_total)
-        self.calcular_valor_total()
+        # Converta self.desconto para Decimal antes de realizar a operação
+        desconto_decimal = Decimal(str(self.desconto))
+
+        self.valor_total = max(subtotal - desconto_decimal, Decimal('0.0'))
+        self.save()
 
     @transaction.atomic
     def finalizar_venda(self):
@@ -176,6 +176,8 @@ class ItemVenda(models.Model):
     quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     preco_unitario = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.0)
+    subtotal = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
 
     def __str__(self):
         return f'{self.quantidade}x {self.produto.nome} - R${self.preco_unitario:.2f} cada'
@@ -183,6 +185,7 @@ class ItemVenda(models.Model):
     def save(self, *args, **kwargs):
         if not self.preco_unitario:
             self.preco_unitario = self.produto.preco
+        self.subtotal = self.quantidade * self.preco_unitario
         super().save(*args, **kwargs)
 
     def clean(self):

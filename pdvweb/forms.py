@@ -5,15 +5,32 @@ from django.contrib.auth.models import AbstractUser, Group
 from .models import ItemVenda, Produto, Venda, Categoria, CustomUser, Operador
 from .models import CustomUser
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from decimal import Decimal
+
+
+# forms.py
+
+class PesquisarProdutoForm(forms.Form):
+    produto_nome = forms.CharField(label='Nome do Produto')
+
+
+class AdicionarItemForm(forms.Form):
+    produto_nome = forms.CharField(label='Nome do Produto')
+    quantidade = forms.IntegerField(label='Quantidade', min_value=1)
 
 
 class RealizarVendaForm(forms.ModelForm):
     produto_nome = forms.CharField(max_length=100, label='Nome do Produto')
-    quantidade = forms.IntegerField(label='Quantidade')
+    quantidade = forms.DecimalField(label='Quantidade')
 
     class Meta:
         model = ItemVenda
         fields = ['produto_nome', 'quantidade']
+
+    def clean_quantidade(self):
+        quantidade = self.cleaned_data.get('quantidade')
+        # Converta a quantidade para Decimal antes de retornar
+        return Decimal(quantidade) if quantidade is not None else None
 
 
 class ProdutoForm(forms.ModelForm):
@@ -63,7 +80,6 @@ class CategoriaForm(forms.ModelForm):
         return nome
 
 
-
 class RegistroOperadorForm(UserCreationForm):
     criar_operador = forms.BooleanField(
         required=False,
@@ -73,15 +89,20 @@ class RegistroOperadorForm(UserCreationForm):
 
     class Meta:
         model = CustomUser
-        fields = UserCreationForm.Meta.fields + ('nome', 'telefone', 'criar_operador')
+        fields = UserCreationForm.Meta.fields + \
+            ('nome', 'telefone', 'criar_operador')
 
     def save(self, commit=True):
         user = super().save(commit=False)
+
+        # Se criar_operador for marcado, cria um operador associado ao usuário
         if self.cleaned_data['criar_operador']:
-            operador = Operador(nome=user.nome, email=user.email, telefone=user.telefone)
+            operador = Operador(
+                nome=user.nome, email=user.email, telefone=user.telefone)
             operador.save()
             operador.usuarios.add(user)
             user.operador = operador
+
         if commit:
             user.save()
         return user

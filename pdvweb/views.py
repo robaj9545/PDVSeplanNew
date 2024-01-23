@@ -4,24 +4,24 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
 from .models import Produto, Venda, ItemVenda, CustomUser, Operador
-from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, RealizarVendaForm
+from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, RealizarVendaForm, PesquisarProdutoForm, AdicionarItemForm
 from django.db import transaction
 from django.contrib.auth import authenticate, login, logout
 from decimal import Decimal
 from django.http import HttpResponseRedirect
-
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
+from django.http import HttpResponse
 
 
 def is_operador(user):
     return hasattr(user, 'operador') and user.operador
 
 
-
 def index(request):
     produtos = Produto.objects.all()
     return render(request, 'pdvweb/index.html', {'produtos': produtos})
-
-
 
 
 @login_required
@@ -57,32 +57,76 @@ def editar_produto(request, produto_id):
     return render(request, 'pdvweb/produto_edit.html', {'form': form, 'produto': produto})
 
 
+@require_POST
+@login_required
+def pesquisar_produto(request):
+    form = PesquisarProdutoForm(request.POST)
+    if form.is_valid():
+        produto_nome = form.cleaned_data['produto_nome']
+        produtos = Produto.objects.filter(nome__icontains=produto_nome)
+        return JsonResponse({
+            'html_resultados': render_to_string('pdvweb/resultados_pesquisa.html', {'produtos': produtos}),
+        })
+    else:
+        return JsonResponse({'error': 'Erro na pesquisa de produtos.'})
+
+
+@require_POST
+@login_required
+def adicionar_item_venda(request):
+    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE).first()
+
+    # Se não existir uma venda pendente, crie uma nova
+    if venda is None:
+        venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
+
+    form = AdicionarItemForm(request.POST)
+
+    if form.is_valid():
+        produto_nome = form.cleaned_data['produto_nome']
+        quantidade = form.cleaned_data['quantidade']
+
+        try:
+            produto = Produto.objects.get(nome=produto_nome)
+            item_venda = ItemVenda.objects.create(
+                venda=venda,
+                produto=produto,
+                quantidade=quantidade,
+                preco_unitario=produto.preco
+            )
+
+            # Chame a função para recalcular o valor total após adicionar um item
+            venda.calcular_valor_total()
+
+            return JsonResponse({
+                'html_itens_venda': render_to_string('pdvweb/itens_da_venda.html', {'itens_venda': venda.itens_venda.all()}),
+                # Converta para string para o JSON
+                'valor_total': str(venda.valor_total),
+            })
+        except Produto.DoesNotExist:
+            return JsonResponse({'error': 'Produto não encontrado.'})
+    else:
+        return JsonResponse({'error': 'Erro ao adicionar item à venda.'})
+
+
 @login_required
 def realizar_venda(request):
-    venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
-    form = RealizarVendaForm()
+    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE).first()
 
-    if request.method == 'POST':
-        form = RealizarVendaForm(request.POST)
+    # Se não existir uma venda pendente, crie uma nova
+    if venda is None:
+        venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
 
-        if form.is_valid():
-            produto_nome = form.cleaned_data['produto_nome']
-            quantidade = form.cleaned_data['quantidade']
+    pesquisar_produto_form = PesquisarProdutoForm()
+    adicionar_item_form = AdicionarItemForm()
 
-            try:
-                produto = Produto.objects.get(nome=produto_nome)
-                item_venda = ItemVenda.objects.create(
-                    venda=venda,
-                    produto=produto,
-                    quantidade=quantidade,
-                    preco_unitario=produto.preco
-                )
-                venda.calcular_valor_total()
-                form = RealizarVendaForm()
-            except Produto.DoesNotExist:
-                form.add_error('produto_nome', 'Produto não encontrado.')
+    return render(request, 'pdvweb/realizar_venda.html', {
+        'venda': venda,
+        'pesquisar_produto_form': pesquisar_produto_form,
+        'adicionar_item_form': adicionar_item_form,
+        'itens_venda': venda.itens_venda.all(),  # Adicionando os itens da venda aqui
+    })
 
-    return render(request, 'pdvweb/realizar_venda.html', {'form': form, 'venda': venda})
 
 @login_required
 def remover_item(request, item_id):
@@ -92,6 +136,7 @@ def remover_item(request, item_id):
     item.delete()
     venda.calcular_valor_total()
     return redirect(reverse('pdvweb:realizar_venda'))
+
 
 @login_required
 def aplicar_desconto(request, venda_id):
@@ -103,11 +148,15 @@ def aplicar_desconto(request, venda_id):
 
     return redirect(reverse('pdvweb:pdvweb:realizar_venda'))
 
+
 @login_required
 def finalizar_venda(request, venda_id):
     venda = get_object_or_404(Venda, id=venda_id)
+
     venda.finalizar_venda()
+
     return redirect(reverse('pdvweb:realizar_venda'))
+
 
 @login_required
 def cancelar_venda(request, venda_id):
@@ -115,14 +164,17 @@ def cancelar_venda(request, venda_id):
     venda.cancelar_venda()
     return redirect(reverse('pdvweb:realizar_venda'))
 
+
 @login_required
 def historico_vendas(request):
     vendas = Venda.objects.all()
     return render(request, 'pdvweb/historico_vendas.html', {'vendas': vendas})
 
+
 def detalhes_venda(request, venda_id):
     venda = get_object_or_404(Venda, pk=venda_id)
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda})
+
 
 @login_required
 def register_user(request):
@@ -154,6 +206,7 @@ def registrar_operador(request):
 
     return render(request, 'pdvweb/registrar_operador.html', {'form': form})
 
+
 def login_operador(request):
     if request.method == 'POST':
         form = LoginOperadorForm(request, request.POST)
@@ -176,9 +229,6 @@ def login_operador(request):
         form = LoginOperadorForm()
 
     return render(request, 'pdvweb/login.html', {'form': form})
-
-
-
 
 
 def logout_view(request):

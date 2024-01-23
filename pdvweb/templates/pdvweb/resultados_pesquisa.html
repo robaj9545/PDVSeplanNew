@@ -1,0 +1,5 @@
+<!-- pdvweb/templates/pdvweb/resultados_pesquisa.html -->
+
+{% for produto in produtos %}
+<div>{{ produto.nome }} - R$ {{ produto.preco }}</div>
+{% endfor %}

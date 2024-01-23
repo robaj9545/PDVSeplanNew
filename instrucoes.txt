@@ -9,10 +9,20 @@ python manage.py migrate
 
 ATIVAR MAQUINA VIRTUAL
 pip install virtualenv
+python -m venv venv
 venv\Scripts\activate
 .\venv\Scripts\activate
 deactivate
 
 EXTRAIR REQUERIMENTOS DO PROJETO
 pip freeze > requirements.txt
+pip install -r requirements.txt
+
+
+GIT
+git add .
+git commit -m "Atualizando"
+git push -u origin main
+git push origin main
+
 

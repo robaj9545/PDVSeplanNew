@@ -1,0 +1,22 @@
+<!-- Os itens da venda serão exibidos aqui -->
+<div id="itens-da-venda">
+    <h2>Itens da Venda</h2>
+    <table border="1">
+        <tr>
+            <th>Produto</th>
+            <th>Quantidade</th>
+            <th>Preço Unitário</th>
+            <th>Subtotal</th>
+            <th>Ação</th>
+        </tr>
+        {% for item in itens_venda %}
+        <tr>
+            <td>{{ item.produto.nome }}</td>
+            <td>{{ item.quantidade }}</td>
+            <td>R$ {{ item.preco_unitario }}</td>
+            <td>R$ {{ item.subtotal }}</td>
+            <td><a href="{% url 'pdvweb:remover_item' item.id %}">Remover</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>

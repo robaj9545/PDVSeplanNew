@@ -19,8 +19,8 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 
 class OperadorAdmin(admin.ModelAdmin):
-    list_display = [ 'nome', 'email', 'telefone']
-    search_fields = [ 'nome', 'email', 'telefone']
+    list_display = ['nome', 'email', 'telefone']
+    search_fields = ['nome', 'email', 'telefone']
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -30,22 +30,26 @@ class CustomUserCreationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Adicione campos personalizados ao formulário
         self.fields['telefone'] = forms.CharField(max_length=20)
-        self.fields['operador'] = forms.ModelChoiceField(queryset=Operador.objects.all(), required=False)
+        self.fields['operador'] = forms.ModelChoiceField(
+            queryset=Operador.objects.all(), required=False)
+
 
 class CustomUserChangeForm(forms.ModelForm):
-    password = ReadOnlyPasswordHashField(label='Senha', help_text="As senhas brutas não são armazenadas, então não há como ver essa senha no banco de dados.")
+    password = ReadOnlyPasswordHashField(
+        label='Senha', help_text="As senhas brutas não são armazenadas, então não há como ver essa senha no banco de dados.")
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'nome', 'email', 'telefone', 'operador', 'password', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions', 'last_login', 'date_joined')
+        fields = ('username', 'nome', 'email', 'telefone', 'operador', 'meus_operadores', 'password',
+                  'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions', 'last_login', 'date_joined')
+
 
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ['username', 'nome', 'email', 'get_telefone']
+    list_display = ['username', 'nome', 'email', 'get_telefone', 'get_nome']
     search_fields = ['username', 'nome', 'email', 'telefone']
 
     def get_nome(self, obj):
@@ -60,40 +64,18 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Informações Pessoais', {'fields': ('nome', 'email', 'telefone')}),
-        ('Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Operador', {'fields': ('operador',)}),
+        ('Permissões', {'fields': ('is_active', 'is_staff',
+         'is_superuser', 'groups', 'user_permissions')}),
+        ('Operador', {'fields': ('operador', 'meus_operadores')}),
         ('Datas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'nome', 'email', 'telefone', 'operador', 'password1', 'password2'),
+            'fields': ('username', 'nome', 'email', 'telefone', 'operador', 'meus_operadores', 'password1', 'password2'),
         }),
     )
-
-    def add_view(self, request, form_url='', extra_context=None):
-        self.inlines = []
-        return super().add_view(request, form_url, extra_context)
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        self.inlines = []
-        return super().change_view(request, object_id, form_url, extra_context)
-
-    def response_add(self, request, obj, post_url_continue=None):
-        if "_addanother" in request.POST:
-            self.inlines = [OperadorInline]
-        return super().response_add(request, obj, post_url_continue)
-
-    def response_change(self, request, obj):
-        if "_addanother" in request.POST:
-            self.inlines = [OperadorInline]
-        return super().response_change(request, obj)
-
-
-class OperadorInline(admin.StackedInline):
-    model = Operador
-    extra = 0
 
 
 class CustomGroupAdmin(admin.ModelAdmin):
@@ -107,7 +89,7 @@ class ItemVendaInline(admin.TabularInline):
 
 class VendaAdmin(admin.ModelAdmin):
     list_display = ['id', 'data', 'status',
-                    'valor_total', 'desconto',]
+                    'valor_total', 'desconto', 'operador_responsavel']
     list_filter = ['status', 'data']
     search_fields = ['id']
     inlines = [ItemVendaInline]

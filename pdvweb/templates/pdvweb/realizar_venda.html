@@ -6,50 +6,102 @@
 <div class="container mt-4">
     <h1>Realizar Venda</h1>
 
-    <form method="post" action="{% url 'pdvweb:realizar_venda' %}">
+    <!-- Pesquisar Produto -->
+    <form id="pesquisar-produto-form" method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ pesquisar_produto_form.produto_nome }}
+        <button type="submit">Pesquisar Produto</button>
+    </form>
 
+    <div id="resultados-pesquisa">
+        <!-- A resposta da pesquisa será exibida aqui -->
+    </div>
+
+    <!-- Adicionar Item à Venda -->
+    <form id="adicionar-item-form" method="post">
+        {% csrf_token %}
+        {{ adicionar_item_form.produto_nome }}
+        {{ adicionar_item_form.quantidade }}
         <button type="submit">Adicionar Item</button>
     </form>
 
-    <h2>Itens da Venda</h2>
-    <table border="1">
-        <tr>
-            <th>Produto</th>
-            <th>Quantidade</th>
-            <th>Preço Unitário</th>
-            <th>Subtotal</th>
-            <th>Ação</th>
-        </tr>
-        {% for item in venda.itens_venda.all %}
-        <tr>
-            <td>{{ item.produto.nome }}</td>
-            <td>{{ item.quantidade }}</td>
-            <td>R$ {{ item.preco_unitario }}</td>
-            <td>R$ {{ item.subtotal }}</td>
-            <td><a href="{% url 'pdvweb:remover_item' item.id %}">Remover</a></td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div id="itens-da-venda">
+        <h2>Itens da Venda ATUAL</h2>
+        <table border="1">
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Preço Unitário</th>
+                <th>Subtotal</th>
+                <th>Ação</th>
+            </tr>
+            {% for item in itens_venda %}
+            <tr>
+                <td>{{ item.produto.nome }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>R$ {{ item.preco_unitario }}</td>
+                <td>R$ {{ item.subtotal }}</td>
+                <td><a href="{% url 'pdvweb:remover_item' item.id %}">Remover</a></td>
+            </tr>
 
-    <form method="post" action="{% url 'pdvweb:aplicar_desconto' venda.id %}">
-        {% csrf_token %}
-        <label for="id_desconto">Desconto:</label>
-        <input type="number" name="desconto" step="0.01" id="id_desconto" value="{{ venda.desconto }}">
-        <button type="submit">Aplicar Desconto</button>
-    </form>
+            {% endfor %}
+        </table>
+    </div>
 
-    <p>Total: R$ {{ venda.valor_total }}</p>
+
+
+
+
+    <p>Total: R$ <span id="valor_total">{{ venda.valor_total }}</span></p>
 
     <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}">
         {% csrf_token %}
         <button type="submit">Finalizar Venda</button>
     </form>
-
-    <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}">
-        {% csrf_token %}
-        <button type="submit">Cancelar Venda</button>
-    </form>
 </div>
+
+<!-- Coloque os scripts JavaScript aqui -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Script para pesquisar produtos
+        $('#pesquisar-produto-form').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "pdvweb:pesquisar_produto" %}',
+                data: formData,
+                success: function (data) {
+                    $('#resultados-pesquisa').html(data.html_resultados);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        // Script para adicionar itens à venda
+        $('#adicionar-item-form').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "pdvweb:adicionar_item_venda" %}',
+                data: formData,
+                success: function (data) {
+                    $('#itens-da-venda').html(data.html_itens_venda);
+                    $('#valor_total').text('R$ ' + data.valor_total);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock %}
