@@ -1,10 +1,15 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.http import Http404
 from .models import Produto, Venda, ItemVenda, CustomUser, Operador
-from .forms import ItemVendaForm, ProdutoForm, RegistroOperadorForm, LoginOperadorForm
+from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, RealizarVendaForm
+from django.db import transaction
 from django.contrib.auth import authenticate, login, logout
 from decimal import Decimal
+from django.http import HttpResponseRedirect
+
 
 
 def is_operador(user):
@@ -15,6 +20,8 @@ def is_operador(user):
 def index(request):
     produtos = Produto.objects.all()
     return render(request, 'pdvweb/index.html', {'produtos': produtos})
+
+
 
 
 @login_required
@@ -49,152 +56,73 @@ def editar_produto(request, produto_id):
 
     return render(request, 'pdvweb/produto_edit.html', {'form': form, 'produto': produto})
 
+
 @login_required
 def realizar_venda(request):
-    produtos = Produto.objects.all()
-    carrinho = request.session.get('carrinho', [])
+    venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
+    form = RealizarVendaForm()
 
     if request.method == 'POST':
-        form = ItemVendaForm(request.POST)
+        form = RealizarVendaForm(request.POST)
 
         if form.is_valid():
-            produto = form.cleaned_data['produto']
+            produto_nome = form.cleaned_data['produto_nome']
             quantidade = form.cleaned_data['quantidade']
 
-            if is_operador(request.user):
-                operador=request.user.customuser.operador
-                venda_em_andamento = Venda.objects.filter(
-                    usuario=usuario, status='aberta').first()
+            try:
+                produto = Produto.objects.get(nome=produto_nome)
+                item_venda = ItemVenda.objects.create(
+                    venda=venda,
+                    produto=produto,
+                    quantidade=quantidade,
+                    preco_unitario=produto.preco
+                )
+                venda.calcular_valor_total()
+                form = RealizarVendaForm()
+            except Produto.DoesNotExist:
+                form.add_error('produto_nome', 'Produto não encontrado.')
 
-                if venda_em_andamento:
-                    venda = venda_em_andamento
-                else:
-                    venda = Venda.objects.create(
-                        usuario=usuario, status='aberta')
-
-                ItemVenda.objects.create(
-                    venda=venda, produto=produto, quantidade=quantidade)
-
-                carrinho.append({'produto_id': produto.id,
-                                'quantidade': quantidade})
-                request.session['carrinho'] = carrinho
-
-                messages.success(request, f'{quantidade}x {
-                                 produto.nome} adicionado ao carrinho.')
-
-                return redirect('pdvweb:realizar_venda')
-            else:
-                messages.error(request, 'Usuário não é um operador.')
-        else:
-            messages.error(
-                request, 'O formulário não é válido. Corrija os erros abaixo.')
-
-    else:
-        form = ItemVendaForm()
-
-    itens_venda = ItemVenda.objects.filter(
-        id__in=[item['produto_id'] for item in carrinho])
-
-    for item in carrinho:
-        produto = get_object_or_404(Produto, id=item['produto_id'])
-        item['subtotal'] = item['quantidade'] * produto.preco
-
-    # Adicione o formulário de registro de operador ao contexto
-    form_registro_operador = RegistroOperadorForm()
-
-    return render(request, 'pdvweb/realizar_venda.html', {
-        'form': form,
-        'carrinho': carrinho,
-        'itens_venda': itens_venda,
-        'produtos': produtos,
-        'form_registro_operador': form_registro_operador  # Adicione o formulário de registro de operador ao contexto
-    })
-
-# ...
-
-
+    return render(request, 'pdvweb/realizar_venda.html', {'form': form, 'venda': venda})
 
 @login_required
-def cancelar_venda(request):
-    carrinho = request.session.get('carrinho', [])
-
-    if not carrinho:
-        messages.warning(
-            request, 'Não há venda em andamento para ser cancelada.')
-        return redirect('pdvweb:realizar_venda')
-
-    del request.session['carrinho']
-    messages.success(request, 'Venda cancelada com sucesso.')
-
-    return redirect('pdvweb:realizar_venda')
-
-
-@login_required
-def remover_item_carrinho(request, produto_id):
-    carrinho = request.session.get('carrinho', [])
-
-    item_index = None
-    for i, item in enumerate(carrinho):
-        if item['produto_id'] == produto_id:
-            item_index = i
-            break
-
-    if item_index is not None:
-        del carrinho[item_index]
-        request.session['carrinho'] = carrinho
-        messages.success(request, 'Item removido do carrinho.')
-    else:
-        messages.warning(request, 'Item não encontrado no carrinho.')
-
-    return redirect('pdvweb:realizar_venda')
-
-
-@login_required
-def finalizar_venda(request):
-    carrinho = request.session.get('carrinho', [])
-
-    if not carrinho:
-        messages.warning(
-            request, 'O carrinho está vazio. Adicione itens antes de finalizar a venda.')
-        return redirect('pdvweb:realizar_venda')
-
-    if not is_operador(request.user):
-        messages.error(request, 'Apenas operadores podem finalizar a venda.')
-        return redirect('pdvweb:realizar_venda')
-
-    venda = Venda.objects.create(operador=request.user.operador)
-
-    for item in carrinho:
-        produto = get_object_or_404(Produto, id=item['produto_id'])
-        quantidade = item['quantidade']
-        ItemVenda.objects.create(
-            venda=venda, produto=produto, quantidade=quantidade)
-
+def remover_item(request, item_id):
+    item = get_object_or_404(ItemVenda, id=item_id)
+    venda = item.venda
+    item.produto.adicionar_estoque(item.quantidade)
+    item.delete()
     venda.calcular_valor_total()
+    return redirect(reverse('pdvweb:realizar_venda'))
+
+@login_required
+def aplicar_desconto(request, venda_id):
+    venda = get_object_or_404(Venda, id=venda_id)
+
+    if request.method == 'POST':
+        desconto = request.POST.get('desconto')
+        venda.aplicar_desconto(float(desconto))
+
+    return redirect(reverse('pdvweb:pdvweb:realizar_venda'))
+
+@login_required
+def finalizar_venda(request, venda_id):
+    venda = get_object_or_404(Venda, id=venda_id)
     venda.finalizar_venda()
+    return redirect(reverse('pdvweb:realizar_venda'))
 
-    messages.success(request, f'Venda finalizada com sucesso. Total: R${venda.valor_total:.2f}')
-    request.session.pop('carrinho', None)
-
-    return redirect('pdvweb:realizar_venda')
-
+@login_required
+def cancelar_venda(request, venda_id):
+    venda = get_object_or_404(Venda, id=venda_id)
+    venda.cancelar_venda()
+    return redirect(reverse('pdvweb:realizar_venda'))
 
 @login_required
 def historico_vendas(request):
-    if is_operador(request.user):
-        vendas = Venda.objects.filter(operador=request.user.operador)
-        return render(request, 'pdvweb/historico_vendas.html', {'vendas': vendas})
-    else:
-        messages.warning(
-            request, 'Perfil de operador não encontrado. Entre em contato com o suporte.')
-        return redirect('pdvweb:index')
+    vendas = Venda.objects.all()
+    return render(request, 'pdvweb/historico_vendas.html', {'vendas': vendas})
 
-
-@login_required
 def detalhes_venda(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id)
+    venda = get_object_or_404(Venda, pk=venda_id)
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda})
-
 
 @login_required
 def register_user(request):
@@ -248,6 +176,8 @@ def login_operador(request):
         form = LoginOperadorForm()
 
     return render(request, 'pdvweb/login.html', {'form': form})
+
+
 
 
 

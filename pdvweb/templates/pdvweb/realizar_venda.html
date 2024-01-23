@@ -4,117 +4,52 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Realizar Venda</h2>
-
-    {% if mensagem_sucesso %}
-    <div class="alert alert-success">
-        {{ mensagem_sucesso }}
-    </div>
-    {% endif %}
+    <h1>Realizar Venda</h1>
 
     <form method="post" action="{% url 'pdvweb:realizar_venda' %}">
         {% csrf_token %}
+        {{ form.as_p }}
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    {{ form.produto.label_tag }}
-                    {{ form.produto }}
-                    {% if form.produto.errors %}
-                    <small class="form-text text-danger">{{ form.produto.errors.0 }}</small>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="form-group">
-                    {{ form.quantidade.label_tag }}
-                    {{ form.quantidade }}
-                    {% if form.quantidade.errors %}
-                    <small class="form-text text-danger">{{ form.quantidade.errors.0 }}</small>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary">Adicionar</button>
-            </div>
-        </div>
+        <button type="submit">Adicionar Item</button>
     </form>
 
-    <hr class="my-4">
-
-    <h3>Produtos Disponíveis</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Produto</th>
-                <th>Preço Unitário</th>
-                <th>Estoque</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for produto in produtos %}
-            <tr>
-                <td>{{ produto.nome }}</td>
-                <td>R$ {{ produto.preco }}</td>
-                <td>{{ produto.estoque }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
+    <h2>Itens da Venda</h2>
+    <table border="1">
+        <tr>
+            <th>Produto</th>
+            <th>Quantidade</th>
+            <th>Preço Unitário</th>
+            <th>Subtotal</th>
+            <th>Ação</th>
+        </tr>
+        {% for item in venda.itens_venda.all %}
+        <tr>
+            <td>{{ item.produto.nome }}</td>
+            <td>{{ item.quantidade }}</td>
+            <td>R$ {{ item.preco_unitario }}</td>
+            <td>R$ {{ item.subtotal }}</td>
+            <td><a href="{% url 'pdvweb:remover_item' item.id %}">Remover</a></td>
+        </tr>
+        {% endfor %}
     </table>
 
-    <hr class="my-4">
+    <form method="post" action="{% url 'pdvweb:aplicar_desconto' venda.id %}">
+        {% csrf_token %}
+        <label for="id_desconto">Desconto:</label>
+        <input type="number" name="desconto" step="0.01" id="id_desconto" value="{{ venda.desconto }}">
+        <button type="submit">Aplicar Desconto</button>
+    </form>
 
-    <h3>Carrinho</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Produto</th>
-                <th>Quantidade</th>
-                <th>Preço Unitário</th>
-                <th>Subtotal</th>
-                <th>Ação</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in carrinho %}
-            <tr>
-                <td>{{ item.produto.nome }}</td>
-                <td>{{ item.quantidade }}</td>
-                <td>R$ {{ item.produto.preco }}</td>
-                <td>R$ {{ item.subtotal }}</td>
-                <td>
-                    {% if item.produto and item.produto.id %}
-                    <a href="{% url 'pdvweb:remover_item_carrinho' item.produto.id %}" class="btn btn-danger btn-sm">
-                        Remover
-                    </a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <p>Total: R$ {{ venda.valor_total }}</p>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="form-group">
-                <label for="desconto">Desconto (R$)</label>
-                <input type="number" name="desconto" id="desconto" class="form-control" min="0" step="0.01">
-            </div>
-        </div>
+    <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}">
+        {% csrf_token %}
+        <button type="submit">Finalizar Venda</button>
+    </form>
 
-        <div class="col-md-6">
-            <a href="{% url 'pdvweb:cancelar_venda' %}" class="btn btn-danger">Cancelar Venda</a>
-        </div>
-    </div>
-
-    <h4 class="mt-4">Total: R$ {{ total_carrinho }}</h4>
-
-    {% if carrinho %}
-    <a href="{% url 'pdvweb:finalizar_venda' %}" class="btn btn-success">Finalizar Venda</a>
-    {% endif %}
+    <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}">
+        {% csrf_token %}
+        <button type="submit">Cancelar Venda</button>
+    </form>
 </div>
 {% endblock %}

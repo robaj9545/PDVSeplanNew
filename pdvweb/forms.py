@@ -7,14 +7,13 @@ from .models import CustomUser
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 
-class ItemVendaForm(forms.ModelForm):
+class RealizarVendaForm(forms.ModelForm):
+    produto_nome = forms.CharField(max_length=100, label='Nome do Produto')
+    quantidade = forms.IntegerField(label='Quantidade')
+
     class Meta:
         model = ItemVenda
-        fields = ['produto', 'quantidade']
-        widgets = {
-            'produto': forms.Select(attrs={'class': 'form-control'}),
-            'quantidade': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
-        }
+        fields = ['produto_nome', 'quantidade']
 
 
 class ProdutoForm(forms.ModelForm):

@@ -1,31 +1,31 @@
 {% extends 'pdvweb/base.html' %}
 
-{% block title %}Histórico de Vendas{% endblock %}
-
 {% block content %}
-    <h2>Histórico de Vendas</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Data</th>
-                <th>Valor Total</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for venda in vendas %}
-                <tr>
-                    <td>{{ venda.id }}</td>
-                    <td>{{ venda.data }}</td>
-                    <td>R$ {{ venda.valor_total }}</td>
-                    <td>{{ venda.get_status_display }}</td>
-                    <td>
-                        <a href="{% url 'pdvweb:detalhes_venda' venda.id %}" class="btn btn-info">Detalhes</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <h1>Histórico de Vendas</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Data</th>
+        <th>Status</th>
+        <th>Operador Responsável</th>
+        <th>Valor Total</th>
+        <th>Desconto</th>
+        <th>Detalhes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for venda in vendas %}
+        <tr>
+          <td>{{ venda.id }}</td>
+          <td>{{ venda.data }}</td>
+          <td>{{ venda.get_status_display }}</td>
+          <td>{% if venda.operador_responsavel %}{{ venda.operador_responsavel.nome }}{% else %}N/A{% endif %}</td>
+          <td>R$ {{ venda.valor_total }}</td>
+          <td>R$ {{ venda.desconto }}</td>
+          <td><a href="{% url 'pdvweb:detalhes_venda' venda.id %}" class="btn btn-primary">Detalhes</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endblock %}

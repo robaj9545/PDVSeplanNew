@@ -13,6 +13,8 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-12 mb-3">
+                <button class="btn btn-outline-secondary ml-2" onclick="goBack()">Voltar</button>
+    
                 {% if user.is_authenticated %}
                 <div class="float-right mx-2">
                     <p class="d-inline-block">Bem-vindo, {{ user.username }}!</p>
@@ -36,6 +38,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
+    <script>
+        function goBack() {
+            // Verifica se a página atual é operador_dashboard.html
+            if (window.location.pathname.includes("/operador_dashboard")) {
+                // Se for, obtém o token CSRF
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+                // Realiza o logout incluindo o token CSRF
+                fetch("{% url 'pdvweb:logout_view' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken,
+                    },
+                })
+                .then(() => {
+                    // Após o logout, redireciona para a página de index
+                    window.location.href = "{% url 'pdvweb:index' %}";
+                });
+            } else {
+                // Se não for, simplesmente volta para a página anterior
+                window.history.back();
+            }
+        }
+    </script>
+    
+    
 </body>
 
 </html>

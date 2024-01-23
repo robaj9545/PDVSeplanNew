@@ -1,10 +1,17 @@
 {% extends 'pdvweb/base.html' %}
 
-{% block title %}Detalhes da Venda{% endblock %}
-
 {% block content %}
-    <h2>Detalhes da Venda</h2>
-    <p>ID: {{ venda.id }}</p>
-    <p>Data: {{ venda.data }}</p>
-    <!-- Adicione mais detalhes conforme necessário -->
+  <h1>Detalhes da Venda #{{ venda.id }}</h1>
+  <p><strong>Data:</strong> {{ venda.data }}</p>
+  <p><strong>Status:</strong> {{ venda.get_status_display }}</p>
+  <p><strong>Operador Responsável:</strong> {% if venda.operador_responsavel %}{{ venda.operador_responsavel.nome }}{% else %}N/A{% endif %}</p>
+  <p><strong>Itens da Venda:</strong></p>
+  <ul>
+    {% for item in venda.itens_venda.all %}
+      <li>{{ item.quantidade }}x {{ item.produto.nome }} - R$ {{ item.preco_unitario }} cada</li>
+    {% endfor %}
+  </ul>
+  <p><strong>Desconto:</strong> R$ {{ venda.desconto }}</p>
+  <p><strong>Valor Total:</strong> R$ {{ venda.valor_total }}</p>
+  <!-- Adicione mais informações conforme necessário -->
 {% endblock %}

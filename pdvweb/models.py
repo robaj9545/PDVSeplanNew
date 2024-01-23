@@ -1,8 +1,9 @@
-# models.py
+#models.py
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import transaction
 from django.utils import timezone
 
 
@@ -22,8 +23,10 @@ class Operador(models.Model):
     def __str__(self):
         return self.nome
 
+
 def default_nome():
     return f'User_{timezone.now().strftime("%Y%m%d%H%M%S")}'
+
 
 class CustomUser(AbstractUser):
     nome = models.CharField(max_length=255, default=default_nome)
@@ -52,8 +55,7 @@ class CustomUser(AbstractUser):
             self.operador.save()
 
         super().save(*args, **kwargs)
-    
-    
+
 
 class CustomGroup(models.Model):
     user_set = models.ManyToManyField(
@@ -129,13 +131,16 @@ class Venda(models.Model):
     valor_total = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.0)
     desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+    operador_responsavel = models.ForeignKey(
+        Operador, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f'Venda {self.id} - {self.data} ({self.get_status_display()})'
 
+    @transaction.atomic
     def calcular_valor_total(self):
-        subtotal = self.itens_venda.aggregate(total=models.Sum(models.F(
-            'quantidade') * models.F('preco_unitario'), output_field=models.DecimalField())).get('total') or 0.0
+        subtotal = self.itens_venda.aggregate(total=models.Sum(
+            models.F('quantidade') * models.F('produto__preco'), output_field=models.DecimalField())).get('total') or 0.0
         self.valor_total = max(subtotal - self.desconto, 0)
         self.save()
 
@@ -143,15 +148,19 @@ class Venda(models.Model):
         self.desconto = min(valor_desconto, self.valor_total)
         self.calcular_valor_total()
 
+    @transaction.atomic
     def finalizar_venda(self):
         for item in self.itens_venda.all():
-            item.produto.remover_estoque(item.quantidade)
+            with transaction.atomic():
+                item.produto.remover_estoque(item.quantidade)
         self.status = self.STATUS_CONCLUIDA
         self.save()
 
+    @transaction.atomic
     def cancelar_venda(self):
         for item in self.itens_venda.all():
-            item.produto.adicionar_estoque(item.quantidade)
+            with transaction.atomic():
+                item.produto.adicionar_estoque(item.quantidade)
         self.status = self.STATUS_CANCELADA
         self.save()
 
