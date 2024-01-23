@@ -14,3 +14,6 @@ deactivate
 EXTRAIR REQUERIMENTOS DO PROJETO
 pip freeze > requirements.txt
 
+ENVIAR DA MAQUINA LOCAL PARA O REPOSITORIO REMOTO DO GIT
+git push --force origin main
+
