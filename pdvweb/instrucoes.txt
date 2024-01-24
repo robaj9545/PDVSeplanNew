@@ -23,7 +23,8 @@ pip install -r requirements.txt
 GIT
 git add .
 git commit -m "Atualizando"
-git push -u origin main
 git push origin main
+
+git push -u origin main
 ENVIAR DA MAQUINA LOCAL PARA O REPOSITORIO REMOTO DO GIT
 git push --force origin main
