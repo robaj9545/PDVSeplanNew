@@ -34,9 +34,6 @@ urlpatterns = [
 
     # VENDA
     path('realizar_venda/', views.realizar_venda, name='realizar_venda'),
-    path('pesquisar_produto/', views.pesquisar_produto, name='pesquisar_produto'),
-    path('adicionar_item_venda/', views.adicionar_item_venda,
-         name='adicionar_item_venda'),
     path('remover_item/<int:item_id>/', views.remover_item, name='remover_item'),
     path('aplicar_desconto/<int:venda_id>/',
          views.aplicar_desconto, name='aplicar_desconto'),

@@ -57,76 +57,83 @@ def editar_produto(request, produto_id):
     return render(request, 'pdvweb/produto_edit.html', {'form': form, 'produto': produto})
 
 
-@require_POST
-@login_required
-def pesquisar_produto(request):
-    form = PesquisarProdutoForm(request.POST)
-    if form.is_valid():
-        produto_nome = form.cleaned_data['produto_nome']
-        produtos = Produto.objects.filter(nome__icontains=produto_nome)
-        return JsonResponse({
-            'html_resultados': render_to_string('pdvweb/resultados_pesquisa.html', {'produtos': produtos}),
-        })
-    else:
-        return JsonResponse({'error': 'Erro na pesquisa de produtos.'})
-
-
-@require_POST
-@login_required
-def adicionar_item_venda(request):
-    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE).first()
-
-    # Se não existir uma venda pendente, crie uma nova
-    if venda is None:
-        venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
-
-    form = AdicionarItemForm(request.POST)
-
-    if form.is_valid():
-        produto_nome = form.cleaned_data['produto_nome']
-        quantidade = form.cleaned_data['quantidade']
-
-        try:
-            produto = Produto.objects.get(nome=produto_nome)
-            item_venda = ItemVenda.objects.create(
-                venda=venda,
-                produto=produto,
-                quantidade=quantidade,
-                preco_unitario=produto.preco
-            )
-
-            # Chame a função para recalcular o valor total após adicionar um item
-            venda.calcular_valor_total()
-
-            return JsonResponse({
-                'html_itens_venda': render_to_string('pdvweb/itens_da_venda.html', {'itens_venda': venda.itens_venda.all()}),
-                # Converta para string para o JSON
-                'valor_total': str(venda.valor_total),
-            })
-        except Produto.DoesNotExist:
-            return JsonResponse({'error': 'Produto não encontrado.'})
-    else:
-        return JsonResponse({'error': 'Erro ao adicionar item à venda.'})
-
-
 @login_required
 def realizar_venda(request):
-    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE).first()
+    # Verificando se existe uma venda pendente
+    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE, operador_responsavel__usuarios=request.user).first()
 
     # Se não existir uma venda pendente, crie uma nova
     if venda is None:
-        venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
+        operador_responsavel = Operador.objects.get(usuarios=request.user)
+        venda = Venda.objects.create(status=Venda.STATUS_PENDENTE, operador_responsavel=operador_responsavel)
 
     pesquisar_produto_form = PesquisarProdutoForm()
     adicionar_item_form = AdicionarItemForm()
 
+    # Verificando se a requisição é do tipo POST
+    if request.method == 'POST':
+        # Se for uma requisição de pesquisa de produto
+        if 'pesquisar_produto' in request.POST:
+            pesquisar_produto_form = PesquisarProdutoForm(request.POST)
+            if pesquisar_produto_form.is_valid():
+                produto_nome = pesquisar_produto_form.cleaned_data['produto_nome']
+                produtos = Produto.objects.filter(nome__icontains=produto_nome)
+                return render(request, 'pdvweb/realizar_venda.html', {
+                    'venda': venda,
+                    'pesquisar_produto_form': pesquisar_produto_form,
+                    'adicionar_item_form': adicionar_item_form,
+                    'itens_venda': venda.itens_venda.all(),
+                    'produtos': produtos,
+                })
+            else:
+                messages.error(request, 'Erro na pesquisa de produtos.')
+                
+        # Se for uma requisição de adição de item à venda
+        elif 'adicionar_item' in request.POST:
+            adicionar_item_form = AdicionarItemForm(request.POST)
+            if adicionar_item_form.is_valid():
+                produto_nome = adicionar_item_form.cleaned_data['produto_nome']
+                quantidade = adicionar_item_form.cleaned_data['quantidade']
+
+                try:
+                    produto = Produto.objects.get(nome=produto_nome)
+                    item_venda = ItemVenda.objects.create(
+                        venda=venda,
+                        produto=produto,
+                        quantidade=quantidade,
+                        preco_unitario=produto.preco
+                    )
+
+                    venda.calcular_valor_total()
+                    messages.success(request, 'Item adicionado à venda com sucesso.')
+                except Produto.DoesNotExist:
+                    messages.error(request, 'Produto não encontrado.')
+                return redirect('pdvweb:realizar_venda')
+
+            else:
+                messages.error(request, 'Erro ao adicionar item à venda.')
+
+    # Se for uma requisição do tipo GET ou de outro tipo
     return render(request, 'pdvweb/realizar_venda.html', {
         'venda': venda,
         'pesquisar_produto_form': pesquisar_produto_form,
         'adicionar_item_form': adicionar_item_form,
-        'itens_venda': venda.itens_venda.all(),  # Adicionando os itens da venda aqui
+        'itens_venda': venda.itens_venda.all(),
     })
 
+@login_required
+def finalizar_venda(request, venda_id):
+    venda = get_object_or_404(Venda, id=venda_id, operador_responsavel__usuarios=request.user)
+
+    venda.finalizar_venda()
+
+    return redirect(reverse('pdvweb:realizar_venda'))
+
+@login_required
+def cancelar_venda(request, venda_id):
+    venda = get_object_or_404(Venda, id=venda_id, operador_responsavel__usuarios=request.user)
+    venda.cancelar_venda()
+    return redirect(reverse('pdvweb:realizar_venda'))
 
 @login_required
 def remover_item(request, item_id):
@@ -148,21 +155,6 @@ def aplicar_desconto(request, venda_id):
 
     return redirect(reverse('pdvweb:pdvweb:realizar_venda'))
 
-
-@login_required
-def finalizar_venda(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id)
-
-    venda.finalizar_venda()
-
-    return redirect(reverse('pdvweb:realizar_venda'))
-
-
-@login_required
-def cancelar_venda(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id)
-    venda.cancelar_venda()
-    return redirect(reverse('pdvweb:realizar_venda'))
 
 
 @login_required

@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
     <title>{% block title %}Meu PDV Web{% endblock %}</title>
 </head>
 
@@ -38,9 +40,14 @@
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-Jzjw5P0iq03qNHU3ea0+Q3pLsk4PPtkKcvlo9J+5AePWOlWt1FIKcYGExXCIbahF" crossorigin="anonymous"></script>
+
 
     <script>
         function goBack() {
@@ -48,13 +55,17 @@
             if (window.location.pathname.includes("/dashboard-operador")) {
                 // Redireciona para a página de login
                 window.location.href = "{% url 'pdvweb:logout_view' %}";
+            } else if (window.location.pathname.includes("/realizar_venda")) {
+                // Verifica se a página atual é realizar_venda
+                // Redireciona para a página do painel do operador
+                window.location.href = "{% url 'pdvweb:operador_dashboard' %}";
             } else {
                 // Se não for, simplesmente volta para a página anterior
                 window.history.back();
             }
         }
     </script>
-
+    
 
 
 

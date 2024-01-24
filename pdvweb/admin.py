@@ -1,5 +1,3 @@
-# admin.py
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django import forms
@@ -16,11 +14,6 @@ class ProdutoAdmin(admin.ModelAdmin):
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ['nome']
     search_fields = ['nome']
-
-
-class OperadorAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'email', 'telefone']
-    search_fields = ['nome', 'email', 'telefone']
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -93,6 +86,17 @@ class VendaAdmin(admin.ModelAdmin):
     list_filter = ['status', 'data']
     search_fields = ['id']
     inlines = [ItemVendaInline]
+
+
+class CustomUserInline(admin.TabularInline):
+    model = Operador.usuarios.through
+    extra = 1
+
+
+class OperadorAdmin(admin.ModelAdmin):
+    list_display = ['nome', 'email', 'telefone']
+    search_fields = ['nome', 'email', 'telefone']
+    inlines = [CustomUserInline]
 
 
 admin.site.register(Produto, ProdutoAdmin)

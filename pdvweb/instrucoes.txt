@@ -1,4 +1,3 @@
-
 MIGRACOES
 python manage.py makemigrations pdvweb
 python manage.py migrate pdvweb
@@ -8,13 +7,23 @@ python manage.py makemigrations
 python manage.py migrate
 
 ATIVAR MAQUINA VIRTUAL
+pip install virtualenv
+python -m venv venv
 venv\Scripts\activate
+.\venv\Scripts\activate
 deactivate
+PC DA SEPLAN
+venvSeplan\Scripts\activate
 
 EXTRAIR REQUERIMENTOS DO PROJETO
 pip freeze > requirements.txt
+pip install -r requirements.txt
 
+
+GIT
+git add .
+git commit -m "Atualizando"
+git push -u origin main
+git push origin main
 ENVIAR DA MAQUINA LOCAL PARA O REPOSITORIO REMOTO DO GIT
 git push --force origin main
-
-OI
