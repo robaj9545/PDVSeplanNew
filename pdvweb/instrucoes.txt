@@ -24,6 +24,7 @@ GIT
 git add .
 git commit -m "Atualizando"
 git push origin main
+git pull
 
 git push -u origin main
 ENVIAR DA MAQUINA LOCAL PARA O REPOSITORIO REMOTO DO GIT

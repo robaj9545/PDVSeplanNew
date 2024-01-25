@@ -1,0 +1,20 @@
+
+<!-- Resultados da pesquisa -->
+<div id="resultadosPesquisa">
+    <h2>Resultados da Pesquisa</h2>
+  <ul>
+    {% for produto in produtos %}
+      <li>
+        <strong>ID:</strong> {{ produto.id }}<br>
+        <strong>Nome:</strong> {{ produto.nome }}<br>
+        <strong>Estoque:</strong> {{ produto.estoque }}<br>
+        <strong>Descrição:</strong> {{ produto.descricao }}<br>
+        <strong>Preço:</strong> R$ {{ produto.preco }}<br>
+        <strong>Categoria:</strong> {{ produto.categoria }}<br>
+      </li>
+    {% endfor %}
+  </ul>
+
+</div>
+
+  

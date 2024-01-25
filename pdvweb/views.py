@@ -57,6 +57,13 @@ def editar_produto(request, produto_id):
     return render(request, 'pdvweb/produto_edit.html', {'form': form, 'produto': produto})
 
 
+def search_produto(request):
+    query = request.POST.get('pesquisarProdutoForm', '')
+    produtos = Produto.objects.filter(nome__icontains=query)
+
+    # Renderiza um template para exibir os resultados da pesquisa
+    return render(request, 'pdvweb/resultado_pesquisa.html', {'produtos': produtos})
+
 @login_required
 def realizar_venda(request):
     # Verificando se existe uma venda pendente
@@ -73,7 +80,7 @@ def realizar_venda(request):
     # Verificando se a requisição é do tipo POST
     if request.method == 'POST':
         # Se for uma requisição de pesquisa de produto
-        if 'pesquisar_produto' in request.POST:
+        if '' in request.POST:
             pesquisar_produto_form = PesquisarProdutoForm(request.POST)
             if pesquisar_produto_form.is_valid():
                 produto_nome = pesquisar_produto_form.cleaned_data['produto_nome']
