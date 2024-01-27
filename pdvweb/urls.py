@@ -45,6 +45,8 @@ urlpatterns = [
     path('historico_vendas/', views.historico_vendas, name='historico_vendas'),
     path('detalhes_venda/<int:venda_id>/',
          views.detalhes_venda, name='detalhes_venda'),
+    path('verificar_cliente/', views.verificar_cliente, name='verificar_cliente'),
+    path('cadastrar_cliente/', views.cadastrar_cliente, name='cadastrar_cliente'),
 
 
 

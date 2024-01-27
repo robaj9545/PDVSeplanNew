@@ -9,11 +9,12 @@
             <h1 class="mb-4">Realizar Venda</h1>
 
             <!-- Dentro do bloco <body> -->
-            <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog" aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
+            <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
+                aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="pesquisarProdutoModalLabel">Pesquisar Produto</h5>
+                            <h5 class="modal-title" id="pesquisarProdutoModalLabel">Consulta Produto</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -23,15 +24,16 @@
                             <form method="post" id="pesquisarProdutoForm">
                                 {% csrf_token %}
                                 <div class="form-group">
-                                    <label for="produtoPesquisa">Digite o Nome ou ID do Produto:</label>
-                                    <input type="text" class="form-control" id="produtoPesquisa" name="produto_pesquisa">
+                                    <label for="produtoPesquisa">Digite o Nome do Produto:</label>
+                                    <input type="text" class="form-control" id="produtoPesquisa"
+                                        name="produto_pesquisa">
                                 </div>
-                                <button type="submit" class="btn btn-primary">Pesquisar</button>
+
                             </form>
                             <!-- Resultados da pesquisa -->
                             <!-- Resultados da pesquisa -->
                             <div id="resultadosPesquisa">
-                                
+
 
                             </div>
                         </div>
@@ -40,31 +42,45 @@
             </div>
 
             <!-- Pesquisar Produto -->
-            
-                    <div class="input-group-prepend">
-                        <button type="button" class="btn btn-outline-secondary" id="menuBtn">
-                            <i class="fas fa-bars"></i> MENU
-                        </button>
-                    </div>
-            
+
+
+            <div class="input-group-prepend">
+                <button type="button" class="btn btn-outline-secondary" id="menuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
 
             <!-- Adicionar Item à Venda -->
-            <form method="post">
-                {% csrf_token %}
-                <div class="input-group mb-3">
-                    {{ adicionar_item_form.produto_nome }}
-                    {{ adicionar_item_form.quantidade }}
-                    <div class="input-group-append">
+
+            <br>
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="produto_nome">Nome do Produto:</label>
+                            <br>
+                            {{ adicionar_item_form.produto_nome }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantidade">Quantidade:</label>
+                            <br>
+                            {{ adicionar_item_form.quantidade }}
+                        </div>
                         <button type="submit" name="adicionar_item" class="btn btn-success">Adicionar Item</button>
-                    </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+
         </div>
 
-        <!-- Itens da Venda ATUAL -->
+        <!-- Itens da Venda -->
         <div class="col-md-6">
-            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded table-responsive">
-                <h2 class="mb-3">Itens da Venda ATUAL</h2>
+            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
+                style="max-height: 400px; overflow-y: auto;">
+                <h2 class="mb-3">Itens da Venda</h2>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -77,30 +93,99 @@
                     </thead>
                     <tbody>
                         {% for item in itens_venda %}
-                            <tr>
-                                <td>{{ item.produto.nome }}</td>
-                                <td>{{ item.quantidade }}</td>
-                                <td>R$ {{ item.preco_unitario }}</td>
-                                <td>R$ {{ item.subtotal }}</td>
-                                <td><a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm">Remover</a></td>
-                            </tr>
+                        <tr>
+                            <td>{{ item.produto.nome }}</td>
+                            <td>{{ item.quantidade }}</td>
+                            <td>R$ {{ item.preco_unitario }}</td>
+                            <td>R$ {{ item.subtotal }}</td>
+                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
+                                    class="btn btn-danger btn-sm">Remover</a></td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <div class="text-right fixed-bottom mb-3">
-                <p class="mb-2">Total: R$ <span id="valor_total">{{ venda.valor_total }}</span></p>
-                {% if venda.id %}
-                    <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Finalizar Venda</button>
-                    </form>
-                {% endif %}
+            <!-- Footer PDV -->
+            <div class="fixed-bottom mb-3">
+                <div class="text-right col-md-10 mb-5">
+                    <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span
+                            id=" valor_total">{{ venda.valor_total }}</span></strong>
+                </div>
+
+
+                <!-- Operador, Cliente, Botões -->
+                <div class=" row align-items-center">
+                    <!-- Operador -->
+                    <div class="col-md-3 text-right mb-2">
+                        Operador: {{ request.user }}
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="col-md-3">
+                        <div id="verificarClienteBtn" class="form-inline mb-2">
+                            <label for="cliente" class="mr-2">Cliente:</label>
+
+                            <!-- Campo para inserir o nome do cliente -->
+                            <input type="text" id="nome_cliente">
+                            <!-- Adicione o ID ao botão Verificar -->
+                            <button onclick="verificarCliente()">Verificar</button>
+
+                            <!-- Pop-up para cadastrar cliente -->
+                            <div id="modal_cadastro_cliente" style="display: none;">
+                                <form id="form_cadastro_cliente">
+                                    <!-- Campos do formulário de cadastro -->
+                                    <input type="text" id="nome_cliente_cadastro" placeholder="Nome">
+                                    <input type="email" id="email_cliente_cadastro" placeholder="Email">
+                                    <input type="text" id="telefone_cliente_cadastro" placeholder="Telefone">
+                                    <button type="submit">Cadastrar</button>
+                                    <button type="button" onclick="fecharModal()">Fechar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Total -->
+                    <div class="fixed-bottom mb-3 ">
+                        <div class="row">
+                            <div class="col-md-5"></div> <!-- Espaço vazio para empurrar para o centro -->
+                            <div class="col-md-7 text-center mb-2"> <!-- Centralizando os elementos -->
+
+                                {% if venda.id %}
+                                <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}"
+                                    class="d-inline ml-2">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Cancelar Venda</button>
+                                </form>
+                                <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}"
+                                    class="d-inline ml-2">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary">Finalizar Venda</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8"></div> <!-- Espaço vazio para empurrar para o centro -->
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
+
+
+
+
+
         </div>
+
+
     </div>
 </div>
+</div>
+
+
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
@@ -110,22 +195,32 @@
 
         // Script para abrir a janela modal de pesquisa
         $('#menuBtn').click(function () {
+            $('#produtoPesquisa').val(''); // Limpa o valor do campo de pesquisa
             $('#pesquisarProdutoModal').modal('show');
         });
 
-        // Script para pesquisa de produtos
-        $('#pesquisarProdutoForm').submit(function (e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            console.log('Script de pesquisa de produto está sendo executado.');
+        // Script para limpar o campo de pesquisa ao fechar o modal
+        $('#pesquisarProdutoModal').on('hidden.bs.modal', function () {
+            $('#produtoPesquisa').val(''); // Limpa o valor do campo de pesquisa
+            $('#resultadosPesquisa').html(''); // Limpa o conteúdo da div de resultados
+        });
 
+        // Script para pesquisa de produtos conforme digitação
+        $('#produtoPesquisa').keyup(function () {
+            var query = $(this).val(); // Obtém o valor atual do campo de pesquisa
+            console.log('Pesquisando por:', query);
+
+            // Envia uma solicitação AJAX para a visualização de pesquisa de produtos
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:search_produto" %}',
-                data: formData,
+                data: {
+                    'produto_pesquisa': query,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val() // Adiciona o token CSRF
+                },
                 success: function (data) {
-                    console.log(data); // Adicione esta linha
-                    $('#resultadosPesquisa').html(data.html_resultados);
+                    console.log(data); // Verifique se os dados estão sendo recebidos corretamente
+                    $('#resultadosPesquisa').html(data); // Atualiza a lista de resultados com os dados recebidos
                 },
                 error: function (error) {
                     console.log(error);
@@ -151,7 +246,56 @@
                 }
             });
         });
+
+        // Lógica para verificar o cliente
+        $('#verificarClienteBtn').click(function () {
+            var nomeCliente = $('#nome_cliente').val();
+            console.log("logica verificar cliente")
+
+            // Enviar uma solicitação AJAX para verificar se o cliente existe
+            $.ajax({
+                type: 'POST',
+                url: '{% url "pdvweb:verificar_cliente" %}',
+                data: {
+                    'nome_cliente': nomeCliente,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                },
+                success: function (data) {
+                    if (!data.cliente_existe) {
+                        // Cliente não encontrado, exibir modal de cadastro
+                        $('#modal_cadastro_cliente').modal('show');
+                    } else {
+                        // Cliente encontrado, realizar outras ações
+                    }
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        // Script para cadastrar cliente
+        $('#form_cadastro_cliente').submit(function (e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "pdvweb:cadastrar_cliente" %}',
+                data: formData,
+                success: function (data) {
+                    // Limpar os campos do formulário de cadastro após o sucesso
+                    $('#form_cadastro_cliente')[0].reset();
+                    // Fechar o modal de cadastro do cliente
+                    $('#modal_cadastro_cliente').modal('hide');
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
     });
 </script>
+
 
 {% endblock %}

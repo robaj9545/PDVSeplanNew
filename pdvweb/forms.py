@@ -2,13 +2,17 @@
 
 from django import forms
 from django.contrib.auth.models import AbstractUser, Group
-from .models import ItemVenda, Produto, Venda, Categoria, CustomUser, Operador
+from .models import ItemVenda, Produto, Venda, Categoria, CustomUser, Operador, Cliente
 from .models import CustomUser
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from decimal import Decimal
 
 
-# forms.py
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['nome', 'email', 'telefone']
+
 
 class PesquisarProdutoForm(forms.Form):
     produto_nome = forms.CharField(label='Nome do Produto')
@@ -17,20 +21,6 @@ class PesquisarProdutoForm(forms.Form):
 class AdicionarItemForm(forms.Form):
     produto_nome = forms.CharField(label='Nome do Produto')
     quantidade = forms.IntegerField(label='Quantidade', min_value=1)
-
-
-class RealizarVendaForm(forms.ModelForm):
-    produto_nome = forms.CharField(max_length=100, label='Nome do Produto')
-    quantidade = forms.DecimalField(label='Quantidade')
-
-    class Meta:
-        model = ItemVenda
-        fields = ['produto_nome', 'quantidade']
-
-    def clean_quantidade(self):
-        quantidade = self.cleaned_data.get('quantidade')
-        # Converta a quantidade para Decimal antes de retornar
-        return Decimal(quantidade) if quantidade is not None else None
 
 
 class ProdutoForm(forms.ModelForm):

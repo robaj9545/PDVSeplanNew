@@ -3,8 +3,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
-from .models import Produto, Venda, ItemVenda, CustomUser, Operador
-from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, RealizarVendaForm, PesquisarProdutoForm, AdicionarItemForm
+from .models import Produto, Venda, ItemVenda, CustomUser, Operador, Cliente
+from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, PesquisarProdutoForm, AdicionarItemForm, ClienteForm
 from django.db import transaction
 from django.contrib.auth import authenticate, login, logout
 from decimal import Decimal
@@ -58,21 +58,25 @@ def editar_produto(request, produto_id):
 
 
 def search_produto(request):
-    query = request.POST.get('pesquisarProdutoForm', '')
+    # Corrigir o nome do campo para corresponder ao HTML
+    query = request.POST.get('produto_pesquisa', '')
     produtos = Produto.objects.filter(nome__icontains=query)
 
     # Renderiza um template para exibir os resultados da pesquisa
     return render(request, 'pdvweb/resultado_pesquisa.html', {'produtos': produtos})
 
+
 @login_required
 def realizar_venda(request):
     # Verificando se existe uma venda pendente
-    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE, operador_responsavel__usuarios=request.user).first()
+    venda = Venda.objects.filter(
+        status=Venda.STATUS_PENDENTE, operador_responsavel__usuarios=request.user).first()
 
     # Se não existir uma venda pendente, crie uma nova
     if venda is None:
         operador_responsavel = Operador.objects.get(usuarios=request.user)
-        venda = Venda.objects.create(status=Venda.STATUS_PENDENTE, operador_responsavel=operador_responsavel)
+        venda = Venda.objects.create(
+            status=Venda.STATUS_PENDENTE, operador_responsavel=operador_responsavel)
 
     pesquisar_produto_form = PesquisarProdutoForm()
     adicionar_item_form = AdicionarItemForm()
@@ -94,7 +98,7 @@ def realizar_venda(request):
                 })
             else:
                 messages.error(request, 'Erro na pesquisa de produtos.')
-                
+
         # Se for uma requisição de adição de item à venda
         elif 'adicionar_item' in request.POST:
             adicionar_item_form = AdicionarItemForm(request.POST)
@@ -112,7 +116,8 @@ def realizar_venda(request):
                     )
 
                     venda.calcular_valor_total()
-                    messages.success(request, 'Item adicionado à venda com sucesso.')
+                    messages.success(
+                        request, 'Item adicionado à venda com sucesso.')
                 except Produto.DoesNotExist:
                     messages.error(request, 'Produto não encontrado.')
                 return redirect('pdvweb:realizar_venda')
@@ -128,19 +133,24 @@ def realizar_venda(request):
         'itens_venda': venda.itens_venda.all(),
     })
 
+
 @login_required
 def finalizar_venda(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id, operador_responsavel__usuarios=request.user)
+    venda = get_object_or_404(
+        Venda, id=venda_id, operador_responsavel__usuarios=request.user)
 
     venda.finalizar_venda()
 
     return redirect(reverse('pdvweb:realizar_venda'))
 
+
 @login_required
 def cancelar_venda(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id, operador_responsavel__usuarios=request.user)
+    venda = get_object_or_404(
+        Venda, id=venda_id, operador_responsavel__usuarios=request.user)
     venda.cancelar_venda()
     return redirect(reverse('pdvweb:realizar_venda'))
+
 
 @login_required
 def remover_item(request, item_id):
@@ -163,7 +173,6 @@ def aplicar_desconto(request, venda_id):
     return redirect(reverse('pdvweb:pdvweb:realizar_venda'))
 
 
-
 @login_required
 def historico_vendas(request):
     vendas = Venda.objects.all()
@@ -173,6 +182,29 @@ def historico_vendas(request):
 def detalhes_venda(request, venda_id):
     venda = get_object_or_404(Venda, pk=venda_id)
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda})
+
+
+def verificar_cliente(request):
+    if request.method == 'POST':
+        nome_cliente = request.POST.get('nome_cliente')
+        cliente_existe = Cliente.objects.filter(nome=nome_cliente).exists()
+        if not cliente_existe:
+            # Cliente não encontrado, exibir modal de cadastro
+            return render(request, 'pdvweb/realizar_venda.html', {'exibir_modal_cadastro': True})
+        else:
+            # Realizar outras ações
+            pass
+    return render(request, 'realizar_venda.html')
+
+
+def cadastrar_cliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            # Cliente cadastrado com sucesso
+            # Você pode adicionar uma mensagem de sucesso aqui, se desejar
+    return render(request, 'pdvweb/realizar_venda.html')
 
 
 @login_required

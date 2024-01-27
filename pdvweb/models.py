@@ -15,6 +15,15 @@ class Categoria(models.Model):
         return self.nome
 
 
+class Cliente(models.Model):
+    nome = models.CharField(max_length=255)
+    email = models.EmailField()
+    telefone = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return self.nome
+
+
 class Operador(models.Model):
     nome = models.CharField(max_length=255)
     email = models.EmailField()
@@ -131,6 +140,8 @@ class Venda(models.Model):
     desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     operador_responsavel = models.ForeignKey(
         Operador, on_delete=models.SET_NULL, null=True, blank=True)
+    cliente = models.ForeignKey(
+        Cliente, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f'Venda {self.id} - {self.data} ({self.get_status_display()})'
