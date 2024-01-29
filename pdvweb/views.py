@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 def is_operador(user):
@@ -188,13 +189,9 @@ def verificar_cliente(request):
     if request.method == 'POST':
         nome_cliente = request.POST.get('nome_cliente')
         cliente_existe = Cliente.objects.filter(nome=nome_cliente).exists()
-        if not cliente_existe:
-            # Cliente não encontrado, exibir modal de cadastro
-            return render(request, 'pdvweb/realizar_venda.html', {'exibir_modal_cadastro': True})
-        else:
-            # Realizar outras ações
-            pass
-    return render(request, 'realizar_venda.html')
+        return JsonResponse({'cliente_existe': cliente_existe})
+    return JsonResponse({'cliente_existe': False})
+
 
 
 def cadastrar_cliente(request):
@@ -202,9 +199,10 @@ def cadastrar_cliente(request):
         form = ClienteForm(request.POST)
         if form.is_valid():
             form.save()
-            # Cliente cadastrado com sucesso
-            # Você pode adicionar uma mensagem de sucesso aqui, se desejar
-    return render(request, 'pdvweb/realizar_venda.html')
+            return JsonResponse({'cliente_cadastrado': True})
+        else:
+            return JsonResponse({'cliente_cadastrado': False, 'errors': form.errors})
+    return JsonResponse({'cliente_cadastrado': False, 'errors': 'Método de requisição inválido'})
 
 
 @login_required

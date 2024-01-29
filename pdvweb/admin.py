@@ -3,13 +3,16 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .models import Produto, Categoria, Venda, ItemVenda, CustomUser, CustomGroup, Operador
+from .models import Produto, Categoria, Venda, ItemVenda, CustomUser, CustomGroup, Operador, Cliente
 
 
 class ProdutoAdmin(admin.ModelAdmin):
     list_display = ['nome', 'preco', 'categoria', 'estoque']
     search_fields = ['nome', 'categoria__nome']
 
+
+class ClienteAdmin(admin.ModelAdmin):
+    list_display = ['nome', 'email', 'telefone']
 
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ['nome']
@@ -105,3 +108,4 @@ admin.site.register(Operador, OperadorAdmin)
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(CustomGroup, CustomGroupAdmin)
 admin.site.register(Venda, VendaAdmin)
+admin.site.register(Cliente, ClienteAdmin)

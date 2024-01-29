@@ -76,6 +76,8 @@
 
         </div>
 
+        
+
         <!-- Itens da Venda -->
         <div class="col-md-6">
             <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
@@ -104,54 +106,67 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                
             </div>
 
-            <!-- Footer PDV -->
-            <div class="fixed-bottom mb-3">
-                <div class="text-right col-md-10 mb-5">
-                    <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span
-                            id=" valor_total">{{ venda.valor_total }}</span></strong>
-                </div>
+            <div class="text-right col-md-11 mb-5">
+                <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span
+                        id=" valor_total">{{ venda.valor_total }}</span></strong>
+            </div>
 
 
-                <!-- Operador, Cliente, Botões -->
-                <div class=" row align-items-center">
-                    <!-- Operador -->
-                    <div class="col-md-3 text-right mb-2">
-                        Operador: {{ request.user }}
-                    </div>
+            
+                        
 
-                    <!-- Cliente -->
-                    <div class="col-md-3">
-                        <div id="verificarClienteBtn" class="form-inline mb-2">
-                            <label for="cliente" class="mr-2">Cliente:</label>
+                        <!-- Modal para cadastrar cliente -->
+                        <div class="modal fade" id="modal_cadastro_cliente" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Cadastrar Cliente</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
 
-                            <!-- Campo para inserir o nome do cliente -->
-                            <input type="text" id="nome_cliente">
-                            <!-- Adicione o ID ao botão Verificar -->
-                            <button onclick="verificarCliente()">Verificar</button>
 
-                            <!-- Pop-up para cadastrar cliente -->
-                            <div id="modal_cadastro_cliente" style="display: none;">
-                                <form id="form_cadastro_cliente">
-                                    <!-- Campos do formulário de cadastro -->
-                                    <input type="text" id="nome_cliente_cadastro" placeholder="Nome">
-                                    <input type="email" id="email_cliente_cadastro" placeholder="Email">
-                                    <input type="text" id="telefone_cliente_cadastro" placeholder="Telefone">
-                                    <button type="submit">Cadastrar</button>
-                                    <button type="button" onclick="fecharModal()">Fechar</button>
-                                </form>
+                                    <div class="modal-body">
+                                        <form id="form_cadastro_cliente">
+                                            <!-- Inclua o token CSRF -->
+                                            {% csrf_token %}
+                                            <!-- Campos do formulário de cadastro -->
+                                            <div class="form-group">
+                                                <label for="nome_cliente_cadastro">Nome:</label>
+                                                <input type="text" class="form-control" id="nome_cliente_cadastro" placeholder="Nome">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="email_cliente_cadastro">Email:</label>
+                                                <input type="email" class="form-control" id="email_cliente_cadastro" placeholder="Email">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="telefone_cliente_cadastro">Telefone:</label>
+                                                <input type="text" class="form-control" id="telefone_cliente_cadastro" placeholder="Telefone">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Cadastrar</button>
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                                        </form>
+                                    </div>
+                                    
+                                </div>
                             </div>
                         </div>
+                        <!-- Fim do modal de cadastro de cliente -->
                     </div>
+                </div>
 
-
-
+            <!-- Footer PDV -->
+            <div class="fixed-bottom mb-1">
+                
                     <!-- Total -->
                     <div class="fixed-bottom mb-3 ">
                         <div class="row">
-                            <div class="col-md-5"></div> <!-- Espaço vazio para empurrar para o centro -->
-                            <div class="col-md-7 text-center mb-2"> <!-- Centralizando os elementos -->
+                            <div class="col-md-7"></div> <!-- Espaço vazio para empurrar para o centro -->
+                            <div class="text-center mb-3"> <!-- Centralizando os elementos -->
 
                                 {% if venda.id %}
                                 <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}"
@@ -166,20 +181,38 @@
                                 </form>
                                 {% endif %}
                             </div>
-                            <div class="col-md-8"></div> <!-- Espaço vazio para empurrar para o centro -->
+                            <div class="col-md-7"></div> <!-- Espaço vazio para empurrar para o centro -->
                         </div>
                     </div>
 
                 </div>
             </div>
 
-
-
-
-
-
         </div>
 
+
+        <!-- Operador, Cliente, Botões -->
+        <div class=" row align-items-center">
+            <!-- Operador -->
+            <div class="col-md-2 text-right mb-2">
+                Operador: {{ request.user }}
+            </div>
+
+            <!-- Cliente -->
+            <div class="col-md-10 mb-2" >
+                <div class="form-inline">
+                    <label for="cliente" class="mr-2">Cliente:</label>
+                    <div class="form-inline">
+                        <label for="nome_cliente" class="mr-2" id="nome_cliente_label" style="display: none;">Cliente:</label>
+                        <!-- Campo para inserir o nome do cliente -->
+                        <input type="text" id="nome_cliente">
+                        <!-- Adicione o ID ao botão Verificar -->
+                        <button id="verificarClienteBtn">Verificar</button>
+                        <!-- Adicione o ID ao botão Trocar Cliente -->
+                        <button id="trocarClienteBtn" style="display: none;">Trocar Cliente</button>
+                    </div>
+                </div>
+            </div>
 
     </div>
 </div>
@@ -247,10 +280,10 @@
             });
         });
 
-        // Lógica para verificar o cliente
+        
+        // Função para verificar o cliente e atualizar a interface
         $('#verificarClienteBtn').click(function () {
             var nomeCliente = $('#nome_cliente').val();
-            console.log("logica verificar cliente")
 
             // Enviar uma solicitação AJAX para verificar se o cliente existe
             $.ajax({
@@ -261,11 +294,15 @@
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (data) {
-                    if (!data.cliente_existe) {
+                    if (data.cliente_existe) {
+                        // Cliente encontrado, atualizar interface
+                        $('#nome_cliente').hide();
+                        $('#verificarClienteBtn').hide();
+                        $('#trocarClienteBtn').show();
+                        $('#nome_cliente_label').text(nomeCliente).show();
+                    } else {
                         // Cliente não encontrado, exibir modal de cadastro
                         $('#modal_cadastro_cliente').modal('show');
-                    } else {
-                        // Cliente encontrado, realizar outras ações
                     }
                 },
                 error: function (error) {
@@ -274,26 +311,49 @@
             });
         });
 
-        // Script para cadastrar cliente
+
+        // Função para trocar o cliente
+        $('#trocarClienteBtn').click(function () {
+            // Reverter as alterações na interface
+            $('#nome_cliente').val('').show();
+            $('#verificarClienteBtn').show();
+            $('#trocarClienteBtn').hide();
+            $('#nome_cliente_label').hide();
+        });
+
+
+        // Função para cadastrar cliente
         $('#form_cadastro_cliente').submit(function (e) {
             e.preventDefault();
-            var formData = $(this).serialize();
+            
+            // Obter os dados do formulário
+            var formData = {
+                'nome': $('#nome_cliente_cadastro').val(),
+                'email': $('#email_cliente_cadastro').val(),
+                'telefone': $('#telefone_cliente_cadastro').val(),
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+            };
 
+            // Enviar a solicitação AJAX para cadastrar o cliente
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:cadastrar_cliente" %}',
                 data: formData,
                 success: function (data) {
+                    console.log("Cliente cadastrado com sucesso");
                     // Limpar os campos do formulário de cadastro após o sucesso
                     $('#form_cadastro_cliente')[0].reset();
                     // Fechar o modal de cadastro do cliente
                     $('#modal_cadastro_cliente').modal('hide');
                 },
                 error: function (error) {
-                    console.log(error);
+                    console.log("Erro ao cadastrar cliente:", error);
+                    // Tratar erros aqui, se necessário
                 }
             });
         });
+
+
     });
 </script>
 
