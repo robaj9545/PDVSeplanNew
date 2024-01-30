@@ -290,9 +290,10 @@
                     if (data.success) {
                     
                         // Verificar se o cliente existe
-                        // Verificar se o cliente existe
-                        if (data.venda.cliente) {
+                        if (data.cliente_existe) { // Correção aqui
                             // Cliente encontrado, atualizar interface
+
+                            
                             $('#nome_cliente').hide();
                             $('#verificarClienteBtn').hide();
                             $('#trocarClienteBtn').show();
@@ -305,6 +306,7 @@
                         console.log("Erro ao verificar cliente:", data.message);
                     }
                 },
+                
                 error: function (error) {
                     console.log("Erro na solicitação AJAX:", error);
                 }

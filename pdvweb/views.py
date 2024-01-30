@@ -195,18 +195,16 @@ def vincular_cliente(request, venda_id, cliente_id):
         venda.cliente = cliente
         venda.save()
 
-        # Verifica se o método da requisição é POST
-        if request.method == 'POST':
-            nome_cliente = request.POST.get('nome_cliente')
-            cliente_existe = Cliente.objects.filter(nome=nome_cliente).exists()
-            # Retorna a resposta JSON com a informação sobre a existência do cliente
-            return JsonResponse({'success': True, 'cliente_existe': cliente_existe})
-        else:
-            # Se o método não for POST, retorna um JsonResponse indicando que não há cliente na requisição
-            return JsonResponse({'success': True, 'cliente_existe': False})
+    # Verifica se o método da requisição é POST
+    if request.method == 'POST':
+        nome_cliente = request.POST.get('nome_cliente')
+        cliente_existe = Cliente.objects.filter(nome=nome_cliente).exists()
+        # Retorna a resposta JSON com a informação sobre a existência do cliente
+        return JsonResponse({'success': True, 'cliente_existe': cliente_existe})
     else:
-        # Se o cliente_id for 0, indica que não há cliente associado à venda
-        return JsonResponse({'success': False, 'message': 'Cliente não encontrado'})
+        # Se o método não for POST, retorna um JsonResponse indicando que não há cliente na requisição
+        return JsonResponse({'success': True, 'cliente_existe': False, 'message': 'Método não é POST'})
+
     
 @require_POST
 def desvincular_cliente(request, venda_id):
