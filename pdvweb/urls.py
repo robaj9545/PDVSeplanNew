@@ -45,9 +45,11 @@ urlpatterns = [
     path('historico_vendas/', views.historico_vendas, name='historico_vendas'),
     path('detalhes_venda/<int:venda_id>/',
          views.detalhes_venda, name='detalhes_venda'),
-    path('verificar_cliente/', views.verificar_cliente, name='verificar_cliente'),
+    path('vincular_cliente/<int:venda_id><int:cliente_id>/', views.vincular_cliente, name='vincular_cliente'),
     path('cadastrar_cliente/', views.cadastrar_cliente, name='cadastrar_cliente'),
-
+    path('desvincular_cliente/<int:venda_id>/', views.desvincular_cliente, name='desvincular_cliente'),
+    path('verificar_cliente/', views.verificar_cliente, name='verificar_cliente'),
+   
 
 
     # Adicione as URLs de autenticação do Django
