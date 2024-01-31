@@ -19,7 +19,8 @@ class Cliente(models.Model):
     nome = models.CharField(max_length=255)
     email = models.EmailField()
     telefone = models.CharField(max_length=20, blank=True, null=True)
-
+    cpf = models.CharField(max_length=14, unique=True,default='000.000.000-00')
+    
     def __str__(self):
         return self.nome
 

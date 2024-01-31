@@ -11,7 +11,7 @@ from decimal import Decimal
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nome', 'email', 'telefone']
+        fields = ['nome', 'email', 'telefone', 'cpf']
 
 
 class PesquisarProdutoForm(forms.Form):

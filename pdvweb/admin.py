@@ -12,7 +12,7 @@ class ProdutoAdmin(admin.ModelAdmin):
 
 
 class ClienteAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'email', 'telefone']
+    list_display = ['nome', 'email', 'telefone', 'cpf']
 
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ['nome']

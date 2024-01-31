@@ -64,7 +64,8 @@ def search_produto(request):
     produtos = Produto.objects.filter(nome__icontains=query)
 
     # Renderiza um template para exibir os resultados da pesquisa
-    return render(request, 'pdvweb/resultado_pesquisa.html', {'produtos': produtos})
+    return render(request, 'pdvweb/realizar_venda.html', {'produtos': produtos})
+
 
 
 @login_required
@@ -85,7 +86,7 @@ def realizar_venda(request):
     # Verificando se a requisição é do tipo POST
     if request.method == 'POST':
         # Se for uma requisição de pesquisa de produto
-        if '' in request.POST:
+        if 'pesquisar_produto' in request.POST:
             pesquisar_produto_form = PesquisarProdutoForm(request.POST)
             if pesquisar_produto_form.is_valid():
                 produto_nome = pesquisar_produto_form.cleaned_data['produto_nome']
@@ -100,6 +101,7 @@ def realizar_venda(request):
             else:
                 messages.error(request, 'Erro na pesquisa de produtos.')
 
+                
         # Se for uma requisição de adição de item à venda
         elif 'adicionar_item' in request.POST:
             adicionar_item_form = AdicionarItemForm(request.POST)
@@ -133,6 +135,7 @@ def realizar_venda(request):
         'adicionar_item_form': adicionar_item_form,
         'itens_venda': venda.itens_venda.all(),
     })
+
 
 
 @login_required
@@ -185,45 +188,32 @@ def detalhes_venda(request, venda_id):
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda})
 
 
-@require_POST
-def vincular_cliente(request, venda_id, cliente_id):
-    venda = get_object_or_404(Venda, id=venda_id)
-    
-    if cliente_id != 0:
-        # Se o cliente_id for diferente de 0, tenta associar o cliente existente à venda
-        cliente = get_object_or_404(Cliente, id=cliente_id)
-        venda.cliente = cliente
-        venda.save()
-
-    # Verifica se o método da requisição é POST
+def verificar_cliente(request, venda_id):
     if request.method == 'POST':
         nome_cliente = request.POST.get('nome_cliente')
-        cliente_existe = Cliente.objects.filter(nome=nome_cliente).exists()
-        # Retorna a resposta JSON com a informação sobre a existência do cliente
-        return JsonResponse({'success': True, 'cliente_existe': cliente_existe})
-    else:
-        # Se o método não for POST, retorna um JsonResponse indicando que não há cliente na requisição
-        return JsonResponse({'success': True, 'cliente_existe': False, 'message': 'Método não é POST'})
+        cpf_cliente = request.POST.get('cpf_cliente')  # Adicione o campo CPF no template HTML
+        
+        # Verificar se o cliente existe pelo nome ou CPF
+        if nome_cliente:
+            cliente = Cliente.objects.filter(nome__iexact=nome_cliente).first()
+        elif cpf_cliente:
+            cliente = Cliente.objects.filter(cpf=cpf_cliente).first()
 
-    
-@require_POST
+        if cliente:
+            # Vincular o cliente à venda
+            venda = get_object_or_404(Venda, id=venda_id)
+            venda.cliente = cliente
+            venda.save()
+            return JsonResponse({'success': True, 'cliente_nome': cliente.nome})
+        else:
+            return JsonResponse({'success': False})
+
 def desvincular_cliente(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id)
-    
-    # Verificar se a venda possui um cliente associado
-    if venda.cliente:
+    if request.method == 'POST':
+        venda = get_object_or_404(Venda, id=venda_id)
         venda.cliente = None
         venda.save()
         return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'success': False, 'message': 'Nenhum cliente associado a esta venda'})
-
-def verificar_cliente(request):
-    if request.method == 'POST':
-        nome_cliente = request.POST.get('nome_cliente')
-        cliente_existe = Cliente.objects.filter(nome=nome_cliente).exists()
-        return JsonResponse({'cliente_existe': cliente_existe})
-    return JsonResponse({'cliente_existe': False})
 
 
 

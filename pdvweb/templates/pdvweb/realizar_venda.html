@@ -7,7 +7,7 @@
     <div class="row">
         <!-- Adicionar Item à Venda -->
         <div class="col-md-6">
-            <h1 class="mb-4">Realizar Venda</h1>
+            
             <!-- Dentro do bloco <body> -->
                 <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
                 aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
@@ -31,10 +31,37 @@
 
                             </form>
                             <!-- Resultados da pesquisa -->
-                            <!-- Resultados da pesquisa -->
-                            <div id="resultadosPesquisa">
-
-
+                            <div id="resultadosPesquisa" class="container mt-3" style="max-height: 400px; overflow-y: auto;">
+                                <div class="table-responsive">
+                                <table class="table">
+                                    <thead class="bg-secondary text-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Estoque</th>
+                                        <th>Descrição</th>
+                                        <th>Preço</th>
+                                        <th>Categoria</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for produto in produtos %}
+                                    <tr style="background-color: #f8f9fa;">
+                                        <td>{{ produto.id }}</td>
+                                        <td>
+                                        <a href="#" onclick="selecionarProduto('{{ produto.id }}', '{{ produto.nome }}', '{{ produto.preco }}')">
+                                            {{ produto.nome }}
+                                        </a>
+                                        </td>
+                                        <td>{{ produto.estoque }}</td>
+                                        <td>{{ produto.descricao }}</td>
+                                        <td>R$ {{ produto.preco }}</td>
+                                        <td>{{ produto.categoria }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>      
+                                </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -50,7 +77,7 @@
                 </button>
             </div>
 
-            
+            <br>
             <div class="card">
                 <div class="card-body">
                     <form method="post">
@@ -82,12 +109,14 @@
                             <span id="nome_cliente_label">{{ venda.cliente.nome }}</span>
                             <button id="trocarClienteBtn" class="btn btn-secondary">Trocar Cliente</button>
                         {% else %}
-                            <input type="text" id="nome_cliente" class="form-control mr-2">
+                            <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
+                            <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
                             <button id="verificarClienteBtn" class="btn btn-primary">Verificar</button>
                         {% endif %}
                     </div>
-                </div>
+                </div>                
             </div>
+
 
 
                 <!-- Modal para cadastrar cliente -->
@@ -118,6 +147,10 @@
                                     <div class="form-group">
                                         <label for="telefone_cliente_cadastro">Telefone:</label>
                                         <input type="text" class="form-control" id="telefone_cliente_cadastro" placeholder="Telefone">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cpf_cliente_cadastro">CPF:</label>
+                                        <input type="text" class="form-control" id="cpf_cliente_cadastro" placeholder="CPF">
                                     </div>
                                     <button type="submit" class="btn btn-primary">Cadastrar</button>
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
@@ -157,49 +190,40 @@
                     </tbody>
                 </table>
             </div>
-            <div class="text-right col-md-11 mb-5">
-                <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{ venda.valor_total }}</span></strong>
-            </div>
+            
         </div>
     </div>
 
-
-
-
-        
-
-
-            
-
+    <!-- BOTA TOTAL-->
+    <div class="text-right col-md-11 mb-5">
+        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{ venda.valor_total }}</span></strong>
+    </div>
             <!-- Footer PDV -->
-            <div class="fixed-bottom mb-1">
-                
-                    <!-- Total -->
-                    <div class="fixed-bottom mb-3 ">
-                        <div class="row">
-                            <div class="col-md-7"></div> <!-- Espaço vazio para empurrar para o centro -->
-                            <div class="text-center mb-3"> <!-- Centralizando os elementos -->
-
-                                {% if venda.id %}
-                                <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}"
-                                    class="d-inline ml-2">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger">Cancelar Venda</button>
-                                </form>
-                                <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}"
-                                    class="d-inline ml-2">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary">Finalizar Venda</button>
-                                </form>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-7"></div> <!-- Espaço vazio para empurrar para o centro -->
+            
+            <div class="fixed-bottom mb-4"> <!-- Posiciona os botões na parte inferior da tela com um espaço de margem -->
+                <div class="container"> <!-- Container para centralizar os elementos -->
+                    <div class="row justify-content-center"> <!-- Centraliza os elementos na horizontal -->
+            
+                        {% if venda.id %}
+                        <div class="col-md-auto"> <!-- Coluna com largura automática -->
+                            <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Cancelar Venda</button>
+                            </form>
                         </div>
+            
+                        <div class="col-md-auto"> <!-- Coluna com largura automática -->
+                            <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">Finalizar Venda</button>
+                            </form>
+                        </div>
+                        {% endif %}
+            
                     </div>
-
                 </div>
             </div>
-
+            
         </div>
 
 
@@ -210,7 +234,11 @@
 </div>
 
 
+<!-- CSS do Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
+<!-- JavaScript do Bootstrap (opcional) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
 <script type="text/javascript">
@@ -237,7 +265,7 @@
             // Envia uma solicitação AJAX para a visualização de pesquisa de produtos
             $.ajax({
                 type: 'POST',
-                url: '{% url "pdvweb:search_produto" %}',
+                url: '{% url "pdvweb:realizar_venda" %}',
                 data: {
                     'produto_pesquisa': query,
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val() // Adiciona o token CSRF
@@ -250,6 +278,17 @@
                     console.log(error);
                 }
             });
+        });
+
+        // Script para lidar com a seleção do produto
+        $(document).on('click', '.resultado-produto', function() {
+            var id = $(this).data('produto-id');
+            var nome = $(this).data('produto-nome');
+            var preco = $(this).data('produto-preco');
+
+            // Enviar os detalhes do produto de volta para a página principal
+            window.opener.postMessage({ id: id, nome: nome, preco: preco }, '*');
+            $('#pesquisarProdutoModal').modal('hide'); // Fechar o modal após a seleção do produto
         });
 
         // Script para adicionar itens à venda
@@ -275,48 +314,50 @@
         // Função para verificar o cliente e atualizar a interface
         $('#verificarClienteBtn').click(function () {
             var nomeCliente = $('#nome_cliente').val();
+            var cpfCliente = $('#cpf_cliente').val();
 
-            // Enviar uma solicitação AJAX para verificar se o cliente existe
             $.ajax({
                 type: 'POST',
-                url: '{% url "pdvweb:vincular_cliente" venda.id 0 %}', // Passando 0 como valor padrão para cliente.id
+                url: '{% url "pdvweb:verificar_cliente" venda.id %}',
                 data: {
                     'nome_cliente': nomeCliente,
+                    'cpf_cliente': cpfCliente,
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (data) {
-                    console.log("CLIENTE VERIFICANDO")
-                    console.log(data)
                     if (data.success) {
-                    
-                        // Verificar se o cliente existe
-                        if (data.cliente_existe) { // Correção aqui
-                            // Cliente encontrado, atualizar interface
-
-                            
-                            $('#nome_cliente').hide();
-                            $('#verificarClienteBtn').hide();
-                            $('#trocarClienteBtn').show();
-                            $('#nome_cliente_label').text(nomeCliente).show();
-                        } else {
-                            // Cliente não encontrado, exibir modal de cadastro
-                            $('#modal_cadastro_cliente').modal('show');
-                        }
+                        console.log(data);
+                        // Se a verificação for bem-sucedida, atualize a interface
+                        $('#nome_cliente_label').text(data.cliente_nome);
+                        $('#nome_cliente_label').show();
+                        $('#trocarClienteBtn').show();
+                        $('#nome_cliente').hide();
+                        $('#cpf_cliente').hide();
+                        $('#verificarClienteBtn').hide();
+                        // Atualize a página após o sucesso da verificação
+                        window.location.reload();
                     } else {
-                        console.log("Erro ao verificar cliente:", data.message);
+                        // Se a verificação falhar, exiba o modal de cadastro do cliente
+                        $('#modal_cadastro_cliente').modal('show');
                     }
                 },
-                
                 error: function (error) {
-                    console.log("Erro na solicitação AJAX:", error);
+                    console.log(error);
                 }
             });
         });
 
-
-        // Função para trocar o cliente
+        // Função para trocar o cliente e atualizar a interface
         $('#trocarClienteBtn').click(function () {
-            // Reverter as alterações na interface
+            // Coloque aqui o código para trocar o cliente, se necessário
+            // Depois, atualize a página
+            window.location.reload();
+        });
+
+
+        
+        // Script para trocar cliente
+        $('#trocarClienteBtn').click(function () {
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:desvincular_cliente" venda.id %}',
@@ -325,6 +366,7 @@
                 },
                 success: function (data) {
                     $('#nome_cliente').val('').show();
+                    $('#cpf_cliente').val('').show();
                     $('#verificarClienteBtn').show();
                     $('#trocarClienteBtn').hide();
                     $('#nome_cliente_label').hide();
@@ -344,6 +386,7 @@
                 'nome': $('#nome_cliente_cadastro').val(),
                 'email': $('#email_cliente_cadastro').val(),
                 'telefone': $('#telefone_cliente_cadastro').val(),
+                'cpf': $('#cpf_cliente_cadastro').val(),
                 'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
             };
 
