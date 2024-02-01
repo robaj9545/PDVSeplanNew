@@ -87,6 +87,7 @@ class Produto(models.Model):
         Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     estoque = models.PositiveIntegerField(default=0)
     data_criacao = models.DateTimeField(default=timezone.now)
+    vendido_por_peso = models.BooleanField(default=False) 
 
     def __str__(self):
         return self.nome
@@ -118,6 +119,7 @@ class Produto(models.Model):
             raise ValueError("O preço não pode ser negativo.")
         if self.estoque < 0:
             raise ValueError("O estoque não pode ser negativo.")
+
 
 
 class Venda(models.Model):

@@ -1,3 +1,5 @@
+#views.pi
+
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -58,83 +60,89 @@ def editar_produto(request, produto_id):
     return render(request, 'pdvweb/produto_edit.html', {'form': form, 'produto': produto})
 
 
+
 def search_produto(request):
     # Corrigir o nome do campo para corresponder ao HTML
     query = request.POST.get('produto_pesquisa', '')
     produtos = Produto.objects.filter(nome__icontains=query)
 
     # Renderiza um template para exibir os resultados da pesquisa
-    return render(request, 'pdvweb/realizar_venda.html', {'produtos': produtos})
-
+    return render(request, 'pdvweb/resultado_pesquisa.html', {'produtos': produtos})
 
 
 @login_required
 def realizar_venda(request):
-    # Verificando se existe uma venda pendente
     venda = Venda.objects.filter(
         status=Venda.STATUS_PENDENTE, operador_responsavel__usuarios=request.user).first()
 
-    # Se não existir uma venda pendente, crie uma nova
     if venda is None:
         operador_responsavel = Operador.objects.get(usuarios=request.user)
         venda = Venda.objects.create(
             status=Venda.STATUS_PENDENTE, operador_responsavel=operador_responsavel)
 
-    pesquisar_produto_form = PesquisarProdutoForm()
     adicionar_item_form = AdicionarItemForm()
+    produtos = []
 
-    # Verificando se a requisição é do tipo POST
     if request.method == 'POST':
-        # Se for uma requisição de pesquisa de produto
-        if 'pesquisar_produto' in request.POST:
-            pesquisar_produto_form = PesquisarProdutoForm(request.POST)
-            if pesquisar_produto_form.is_valid():
-                produto_nome = pesquisar_produto_form.cleaned_data['produto_nome']
-                produtos = Produto.objects.filter(nome__icontains=produto_nome)
-                return render(request, 'pdvweb/realizar_venda.html', {
-                    'venda': venda,
-                    'pesquisar_produto_form': pesquisar_produto_form,
-                    'adicionar_item_form': adicionar_item_form,
-                    'itens_venda': venda.itens_venda.all(),
-                    'produtos': produtos,
-                })
-            else:
-                messages.error(request, 'Erro na pesquisa de produtos.')
+        if 'produto_pesquisa' in request.POST:
+            query = request.POST.get('produto_pesquisa', '')
+            produtos = Produto.objects.filter(nome__icontains=query)
 
-                
-        # Se for uma requisição de adição de item à venda
         elif 'adicionar_item' in request.POST:
             adicionar_item_form = AdicionarItemForm(request.POST)
             if adicionar_item_form.is_valid():
-                produto_nome = adicionar_item_form.cleaned_data['produto_nome']
-                quantidade = adicionar_item_form.cleaned_data['quantidade']
+                produto_identificador = adicionar_item_form.cleaned_data.get('produto_identificador')
+                quantidade = adicionar_item_form.cleaned_data.get('quantidade')
 
-                try:
-                    produto = Produto.objects.get(nome=produto_nome)
-                    item_venda = ItemVenda.objects.create(
-                        venda=venda,
-                        produto=produto,
-                        quantidade=quantidade,
-                        preco_unitario=produto.preco
-                    )
+                produto = None
+                if isinstance(produto_identificador, str) and produto_identificador.isdigit():
+                    try:
+                        produto_id = int(produto_identificador)
+                        produto = Produto.objects.filter(id=produto_id).first()
+                    except ValueError:
+                        produto = None
+                else:
+                    produto = Produto.objects.filter(nome__icontains=produto_identificador).first()
+
+                if produto:
+                    if produto.vendido_por_peso:
+                        # Se o produto for vendido por peso, a quantidade é considerada como peso
+                        item_venda = ItemVenda.objects.create(
+                            venda=venda,
+                            produto=produto,
+                            quantidade=quantidade,  # A quantidade é o peso neste caso
+                            preco_unitario=produto.preco
+                        )
+                    else:
+                        # Se não for vendido por peso, a quantidade é considerada como quantidade de itens
+                        item_venda = ItemVenda.objects.create(
+                            venda=venda,
+                            produto=produto,
+                            quantidade=quantidade,
+                            preco_unitario=produto.preco
+                        )
 
                     venda.calcular_valor_total()
                     messages.success(
                         request, 'Item adicionado à venda com sucesso.')
-                except Produto.DoesNotExist:
+                else:
                     messages.error(request, 'Produto não encontrado.')
+
                 return redirect('pdvweb:realizar_venda')
 
             else:
                 messages.error(request, 'Erro ao adicionar item à venda.')
 
-    # Se for uma requisição do tipo GET ou de outro tipo
     return render(request, 'pdvweb/realizar_venda.html', {
         'venda': venda,
-        'pesquisar_produto_form': pesquisar_produto_form,
         'adicionar_item_form': adicionar_item_form,
         'itens_venda': venda.itens_venda.all(),
+        'produtos': produtos,
     })
+
+
+
+
 
 
 

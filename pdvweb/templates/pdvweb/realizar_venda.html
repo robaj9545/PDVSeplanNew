@@ -30,39 +30,7 @@
                                 </div>
 
                             </form>
-                            <!-- Resultados da pesquisa -->
-                            <div id="resultadosPesquisa" class="container mt-3" style="max-height: 400px; overflow-y: auto;">
-                                <div class="table-responsive">
-                                <table class="table">
-                                    <thead class="bg-secondary text-light">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Nome</th>
-                                        <th>Estoque</th>
-                                        <th>Descrição</th>
-                                        <th>Preço</th>
-                                        <th>Categoria</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for produto in produtos %}
-                                    <tr style="background-color: #f8f9fa;">
-                                        <td>{{ produto.id }}</td>
-                                        <td>
-                                        <a href="#" onclick="selecionarProduto('{{ produto.id }}', '{{ produto.nome }}', '{{ produto.preco }}')">
-                                            {{ produto.nome }}
-                                        </a>
-                                        </td>
-                                        <td>{{ produto.estoque }}</td>
-                                        <td>{{ produto.descricao }}</td>
-                                        <td>R$ {{ produto.preco }}</td>
-                                        <td>{{ produto.categoria }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                    </tbody>      
-                                </table>
-                                </div>
-                            </div>
+                            <div id="resultadosPesquisa" ></div>
                         </div>
                     </div>
                 </div>
@@ -78,24 +46,36 @@
             </div>
 
             <br>
-            <div class="card">
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="produto_nome">Nome do Produto:</label>
-                            <br>
-                            {{ adicionar_item_form.produto_nome }}
-                        </div>
-                        <div class="form-group">
-                            <label for="quantidade">Quantidade:</label>
-                            <br>
-                            {{ adicionar_item_form.quantidade }}
-                        </div>
-                        <button type="submit" name="adicionar_item" class="btn btn-success">Adicionar Item</button>
-                    </form>
-                </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="produto_identificador">Nome ou ID do Produto:</label>
+                        <br>
+                        {{ adicionar_item_form.produto_identificador }}
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade:</label>
+                        <br>
+                        {% if adicionar_item_form.produto_identificador.value and adicionar_item_form.produto_identificador.value|length %}
+                            {% if adicionar_item_form.produto_identificador.value %}
+                                {% if adicionar_item_form.produto_identificador.value.vendido_por_peso %}
+                                    <!-- Se o produto for vendido por peso, exiba um campo de entrada para peso -->
+                                    <input type="number" step="0.01" min="0" class="form-control" id="quantidade" name="quantidade" placeholder="Peso (kg)">
+                                {% else %}
+                                    <!-- Se não for vendido por peso, exiba um campo de entrada para quantidade de itens -->
+                                    <input type="number" min="1" class="form-control" id="quantidade" name="quantidade" placeholder="Quantidade">
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <!-- Caso nenhum produto tenha sido selecionado, exiba um campo de entrada para quantidade -->
+                            <input type="number" min="1" class="form-control" id="quantidade" name="quantidade" placeholder="Quantidade">
+                        {% endif %}
+                    </div>                        
+                    <button type="submit" name="adicionar_item" class="btn btn-success">Adicionar Item</button>
+                </form>
             </div>
+            
             <!-- Operador e Cliente -->
             <div class="mt-4">
                 <div class="form-group">
@@ -177,7 +157,7 @@
                             <th scope="col">Ação</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="line-height: 1;">
                         {% for item in itens_venda %}
                         <tr>
                             <td>{{ item.produto.nome }}</td>
@@ -252,11 +232,15 @@
         });
 
         // Script para limpar o campo de pesquisa ao fechar o modal
-        $('#pesquisarProdutoModal').on('hidden.bs.modal', function () {
+        $('#pesquisarProdutoModal').on('hide.bs.modal', function () {
             $('#produtoPesquisa').val(''); // Limpa o valor do campo de pesquisa
             $('#resultadosPesquisa').html(''); // Limpa o conteúdo da div de resultados
+            
         });
 
+        
+
+       
         // Script para pesquisa de produtos conforme digitação
         $('#produtoPesquisa').keyup(function () {
             var query = $(this).val(); // Obtém o valor atual do campo de pesquisa
@@ -265,7 +249,7 @@
             // Envia uma solicitação AJAX para a visualização de pesquisa de produtos
             $.ajax({
                 type: 'POST',
-                url: '{% url "pdvweb:realizar_venda" %}',
+                url: '{% url "pdvweb:search_produto" %}',
                 data: {
                     'produto_pesquisa': query,
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val() // Adiciona o token CSRF
@@ -280,21 +264,28 @@
             });
         });
 
-        // Script para lidar com a seleção do produto
-        $(document).on('click', '.resultado-produto', function() {
-            var id = $(this).data('produto-id');
-            var nome = $(this).data('produto-nome');
-            var preco = $(this).data('produto-preco');
+        
 
-            // Enviar os detalhes do produto de volta para a página principal
-            window.opener.postMessage({ id: id, nome: nome, preco: preco }, '*');
-            $('#pesquisarProdutoModal').modal('hide'); // Fechar o modal após a seleção do produto
-        });
-
+        
         // Script para adicionar itens à venda
         $('form[name="adicionar_item"]').submit(function (e) {
             e.preventDefault();
             var formData = $(this).serialize();
+
+            var produtoIdentificador = $('#produto_identificador').val(); // Obtém o identificador do produto
+            var quantidade = $('#quantidade').val(); // Obtém a quantidade inserida pelo usuário
+            
+            alert(produtoIdentificador)
+
+            // Verifica se a quantidade deve ser enviada como peso ou quantidade de itens
+            if (produtoIdentificador && quantidade && quantidade.length) {
+                var vendidoPorPeso = parseInt('{{ adicionar_item_form.produto_identificador.value.vendido_por_peso|default:"0" }}');
+                alert(vendidoPorPeso)
+                if (vendidoPorPeso) {
+                    // Se o produto for vendido por peso, a quantidade é enviada como peso
+                    formData += '&quantidade=' + quantidade;
+                }
+            }
 
             $.ajax({
                 type: 'POST',
@@ -309,6 +300,7 @@
                 }
             });
         });
+
 
         
         // Função para verificar o cliente e atualizar a interface

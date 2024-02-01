@@ -7,8 +7,9 @@ from .models import Produto, Categoria, Venda, ItemVenda, CustomUser, CustomGrou
 
 
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'preco', 'categoria', 'estoque']
+    list_display = ['id','nome', 'preco', 'categoria', 'estoque', 'vendido_por_peso']  # Adicionado 'vendido_por_peso' para exibição
     search_fields = ['nome', 'categoria__nome']
+    list_editable = ['vendido_por_peso'] 
 
 
 class ClienteAdmin(admin.ModelAdmin):

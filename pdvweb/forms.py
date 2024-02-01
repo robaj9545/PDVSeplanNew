@@ -19,8 +19,19 @@ class PesquisarProdutoForm(forms.Form):
 
 
 class AdicionarItemForm(forms.Form):
-    produto_nome = forms.CharField(label='Nome do Produto')
-    quantidade = forms.IntegerField(label='Quantidade', min_value=1)
+    produto_identificador = forms.CharField(label='Nome ou ID do Produto')
+    quantidade = forms.DecimalField(label='Quantidade', min_value=0.01, max_digits=10, decimal_places=2)
+
+    def clean_produto_identificador(self):
+        identificador = self.cleaned_data['produto_identificador']
+        try:
+            produto = Produto.objects.get(id=identificador)  # Tente buscar por ID
+        except Produto.DoesNotExist:
+            try:
+                produto = Produto.objects.get(nome__iexact=identificador)  # Tente buscar por nome (case insensitive)
+            except Produto.DoesNotExist:
+                raise forms.ValidationError("Produto não encontrado.")
+        return produto
 
 
 class ProdutoForm(forms.ModelForm):
