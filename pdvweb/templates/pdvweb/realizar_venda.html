@@ -3,9 +3,60 @@
 {% block title %}Realizar Venda{% endblock %}
 
 {% block content %}
+
+
+
+<form method="post" id="adicionarItemForm">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="produto_identificador">Nome ou ID do Produto:</label>
+        <br>
+        {{ adicionar_item_form.produto_identificador }}
+    </div>
+    <div class="form-group">
+        <label for="peso_vendido">Peso Vendido (kg):</label>
+        <br>
+        {{ adicionar_item_form.peso_vendido }}
+    </div>                        
+    <button type="submit" class="btn btn-success">Adicionar Item</button>
+</form>
+
+
+<!-- Adicionar Item à Venda -->
+<div class="col-md-6">            
+    <!-- Modal para pesquisar produto -->
+    <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
+        aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
+        <!-- Conteúdo do modal aqui -->
+    </div>
+
+    <div class="card-body">
+        <form method="post" id="adicionarItemForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="produto_identificador">Nome ou ID do Produto:</label>
+                <br>
+                {{ adicionar_item_form.produto_identificador }}
+            </div>
+            <div class="form-group">
+                <label for="quantidade">Quantidade:</label>
+                <br>
+                {{ adicionar_item_form.quantidade }}
+            </div>
+            <div class="form-group">
+                <label for="peso_vendido">Peso Vendido (kg):</label>
+                <br>
+                {{ adicionar_item_por_peso_form.peso_vendido }}
+            </div>                        
+            <button type="submit" class="btn btn-success">Adicionar Item</button>
+        </form>        
+    </div>           
+</div>
+
+
 <div class="container mt-4">
     <div class="row">
-        <!-- Adicionar Item à Venda -->
+        
         <div class="col-md-6">
             
             <!-- Dentro do bloco <body> -->
@@ -46,35 +97,7 @@
             </div>
 
             <br>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label for="produto_identificador">Nome ou ID do Produto:</label>
-                        <br>
-                        {{ adicionar_item_form.produto_identificador }}
-                    </div>
-                    <div class="form-group">
-                        <label for="quantidade">Quantidade:</label>
-                        <br>
-                        {% if adicionar_item_form.produto_identificador.value and adicionar_item_form.produto_identificador.value|length %}
-                            {% if adicionar_item_form.produto_identificador.value %}
-                                {% if adicionar_item_form.produto_identificador.value.vendido_por_peso %}
-                                    <!-- Se o produto for vendido por peso, exiba um campo de entrada para peso -->
-                                    <input type="number" step="0.01" min="0" class="form-control" id="quantidade" name="quantidade" placeholder="Peso (kg)">
-                                {% else %}
-                                    <!-- Se não for vendido por peso, exiba um campo de entrada para quantidade de itens -->
-                                    <input type="number" min="1" class="form-control" id="quantidade" name="quantidade" placeholder="Quantidade">
-                                {% endif %}
-                            {% endif %}
-                        {% else %}
-                            <!-- Caso nenhum produto tenha sido selecionado, exiba um campo de entrada para quantidade -->
-                            <input type="number" min="1" class="form-control" id="quantidade" name="quantidade" placeholder="Quantidade">
-                        {% endif %}
-                    </div>                        
-                    <button type="submit" name="adicionar_item" class="btn btn-success">Adicionar Item</button>
-                </form>
-            </div>
+            
             
             <!-- Operador e Cliente -->
             <div class="mt-4">
@@ -268,25 +291,10 @@
 
         
         // Script para adicionar itens à venda
-        $('form[name="adicionar_item"]').submit(function (e) {
+        // Script para adicionar itens à venda
+        $('#adicionarItemForm').submit(function (e) {
             e.preventDefault();
             var formData = $(this).serialize();
-
-            var produtoIdentificador = $('#produto_identificador').val(); // Obtém o identificador do produto
-            var quantidade = $('#quantidade').val(); // Obtém a quantidade inserida pelo usuário
-            
-            alert(produtoIdentificador)
-
-            // Verifica se a quantidade deve ser enviada como peso ou quantidade de itens
-            if (produtoIdentificador && quantidade && quantidade.length) {
-                var vendidoPorPeso = parseInt('{{ adicionar_item_form.produto_identificador.value.vendido_por_peso|default:"0" }}');
-                alert(vendidoPorPeso)
-                if (vendidoPorPeso) {
-                    // Se o produto for vendido por peso, a quantidade é enviada como peso
-                    formData += '&quantidade=' + quantidade;
-                }
-            }
-
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:realizar_venda" %}',

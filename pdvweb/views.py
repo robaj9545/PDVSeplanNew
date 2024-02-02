@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
 from .models import Produto, Venda, ItemVenda, CustomUser, Operador, Cliente
-from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, PesquisarProdutoForm, AdicionarItemForm, ClienteForm
+from .forms import ProdutoForm, RegistroOperadorForm, LoginOperadorForm, PesquisarProdutoForm, AdicionarItemForm, ClienteForm, AdicionarItemPorPesoForm
 from django.db import transaction
 from django.contrib.auth import authenticate, login, logout
 from decimal import Decimal
@@ -81,6 +81,7 @@ def realizar_venda(request):
             status=Venda.STATUS_PENDENTE, operador_responsavel=operador_responsavel)
 
     adicionar_item_form = AdicionarItemForm()
+    adicionar_item_peso_form = AdicionarItemPorPesoForm()  # Adicionar o formulário para adição de itens por peso
     produtos = []
 
     if request.method == 'POST':
@@ -106,15 +107,13 @@ def realizar_venda(request):
 
                 if produto:
                     if produto.vendido_por_peso:
-                        # Se o produto for vendido por peso, a quantidade é considerada como peso
                         item_venda = ItemVenda.objects.create(
                             venda=venda,
                             produto=produto,
-                            quantidade=quantidade,  # A quantidade é o peso neste caso
+                            quantidade=quantidade,
                             preco_unitario=produto.preco
                         )
                     else:
-                        # Se não for vendido por peso, a quantidade é considerada como quantidade de itens
                         item_venda = ItemVenda.objects.create(
                             venda=venda,
                             produto=produto,
@@ -133,17 +132,62 @@ def realizar_venda(request):
             else:
                 messages.error(request, 'Erro ao adicionar item à venda.')
 
+        elif 'adicionar_item_peso' in request.POST:  # Lidar com a adição de itens por peso
+            adicionar_item_peso_form = AdicionarItemPorPesoForm(request.POST)
+            if adicionar_item_peso_form.is_valid():
+                produto_identificador = adicionar_item_peso_form.cleaned_data.get('produto_identificador')
+                peso_vendido = adicionar_item_peso_form.cleaned_data.get('peso_vendido')
+
+                produto = None
+                if isinstance(produto_identificador, str) and produto_identificador.isdigit():
+                    try:
+                        produto_id = int(produto_identificador)
+                        produto = Produto.objects.filter(id=produto_id).first()
+                    except ValueError:
+                        produto = None
+                else:
+                    produto = Produto.objects.filter(nome__icontains=produto_identificador).first()
+
+                if produto:
+                    if produto.vendido_por_peso:
+                        item_venda = ItemVenda.objects.create(
+                            venda=venda,
+                            produto=produto,
+                            quantidade=peso_vendido,  # Peso vendido
+                            preco_unitario=produto.preco
+                        )
+                        venda.calcular_valor_total()
+                        messages.success(
+                            request, 'Item adicionado à venda com sucesso.')
+                    else:
+                        messages.error(
+                            request, 'Produto não pode ser vendido por peso.')
+                else:
+                    messages.error(request, 'Produto não encontrado.')
+
+                return redirect('pdvweb:realizar_venda')
+
+            else:
+                messages.error(
+                    request, 'Erro ao adicionar item por peso à venda.')
+
     return render(request, 'pdvweb/realizar_venda.html', {
         'venda': venda,
         'adicionar_item_form': adicionar_item_form,
+        'adicionar_item_peso_form': adicionar_item_peso_form,
         'itens_venda': venda.itens_venda.all(),
         'produtos': produtos,
     })
 
 
-
-
-
+@login_required
+def remover_item(request, item_id):
+    item = get_object_or_404(ItemVenda, id=item_id)
+    venda = item.venda
+    item.produto.adicionar_estoque(item.quantidade)
+    item.delete()
+    venda.calcular_valor_total()
+    return redirect(reverse('pdvweb:realizar_venda'))
 
 
 @login_required
@@ -165,16 +209,6 @@ def cancelar_venda(request, venda_id):
 
 
 @login_required
-def remover_item(request, item_id):
-    item = get_object_or_404(ItemVenda, id=item_id)
-    venda = item.venda
-    item.produto.adicionar_estoque(item.quantidade)
-    item.delete()
-    venda.calcular_valor_total()
-    return redirect(reverse('pdvweb:realizar_venda'))
-
-
-@login_required
 def aplicar_desconto(request, venda_id):
     venda = get_object_or_404(Venda, id=venda_id)
 
@@ -182,7 +216,7 @@ def aplicar_desconto(request, venda_id):
         desconto = request.POST.get('desconto')
         venda.aplicar_desconto(float(desconto))
 
-    return redirect(reverse('pdvweb:pdvweb:realizar_venda'))
+    return redirect(reverse('pdvweb:realizar_venda'))
 
 
 @login_required
@@ -199,16 +233,13 @@ def detalhes_venda(request, venda_id):
 def verificar_cliente(request, venda_id):
     if request.method == 'POST':
         nome_cliente = request.POST.get('nome_cliente')
-        cpf_cliente = request.POST.get('cpf_cliente')  # Adicione o campo CPF no template HTML
-        
-        # Verificar se o cliente existe pelo nome ou CPF
+        cpf_cliente = request.POST.get('cpf_cliente')
         if nome_cliente:
             cliente = Cliente.objects.filter(nome__iexact=nome_cliente).first()
         elif cpf_cliente:
             cliente = Cliente.objects.filter(cpf=cpf_cliente).first()
 
         if cliente:
-            # Vincular o cliente à venda
             venda = get_object_or_404(Venda, id=venda_id)
             venda.cliente = cliente
             venda.save()

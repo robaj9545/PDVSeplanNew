@@ -3,17 +3,18 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .models import Produto, Categoria, Venda, ItemVenda, CustomUser, CustomGroup, Operador, Cliente
+from .models import Produto, Categoria, Venda, ItemVenda, CustomUser, CustomGroup, Operador, Cliente 
 
 
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display = ['id','nome', 'preco', 'categoria', 'estoque', 'vendido_por_peso']  # Adicionado 'vendido_por_peso' para exibição
+    list_display = ['id','nome', 'preco', 'categoria', 'estoque', ]  
     search_fields = ['nome', 'categoria__nome']
-    list_editable = ['vendido_por_peso'] 
+    
 
 
 class ClienteAdmin(admin.ModelAdmin):
     list_display = ['nome', 'email', 'telefone', 'cpf']
+
 
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ['nome']
