@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from .models import Categoria, Cliente, Operador, CustomUser, CustomGroup, ProdutoPorQuantidade, ProdutoPorPeso, Venda, ItemVendaPorQuantidade, ItemVendaPorPeso
-
+from .forms import VendaForm
 
 
 class CategoriaAdmin(admin.ModelAdmin):
@@ -38,15 +38,27 @@ class ProdutoPorQuantidadeAdmin(admin.ModelAdmin):
 
 
 class ProdutoPorPesoAdmin(admin.ModelAdmin):
-    list_display = ['id','nome', 'codigo', 'categoria', 'preco_por_kilo', 'estoque_em_kilos']
+    list_display = ['id', 'nome', 'codigo', 'categoria',
+                    'preco_por_kilo', 'estoque_em_kilos']
     search_fields = ['nome', 'codigo']
     list_filter = ['categoria']
+
+
+class ItemVendaPorQuantidadeInline(admin.TabularInline):
+    model = ItemVendaPorQuantidade
+
+
+class ItemVendaPorPesoInline(admin.TabularInline):
+    model = ItemVendaPorPeso
 
 
 class VendaAdmin(admin.ModelAdmin):
     list_display = ['id', 'data', 'status', 'valor_total', 'desconto']
     search_fields = ['id', 'status']
     list_filter = ['status']
+    inlines = [ItemVendaPorQuantidadeInline, ItemVendaPorPesoInline]
+
+    form = VendaForm
 
 
 class ItemVendaPorQuantidadeAdmin(admin.ModelAdmin):

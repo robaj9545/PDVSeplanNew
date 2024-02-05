@@ -22,7 +22,7 @@ class PesquisarProdutoForm(forms.Form):
 class VendaForm(forms.ModelForm):
     class Meta:
         model = Venda
-        fields = ['desconto']
+        fields = '__all__'
 
 
 class ProdutoBaseForm(forms.Form):

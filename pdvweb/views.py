@@ -29,13 +29,17 @@ def index(request):
 
 @login_required
 def listar_produtos(request):
-    todos_produtos = list(ProdutoPorQuantidade.objects.all()) + list(ProdutoPorPeso.objects.all())
+    todos_produtos = list(ProdutoPorQuantidade.objects.all()
+                          ) + list(ProdutoPorPeso.objects.all())
     return render(request, 'pdvweb/produtos_list.html', {'todos_produtos': todos_produtos})
+
 
 @login_required
 def detalhar_produto(request, produto_codigo):
-    produto_por_quantidade = ProdutoPorQuantidade.objects.filter(codigo=produto_codigo).first()
-    produto_por_peso = ProdutoPorPeso.objects.filter(codigo=produto_codigo).first()
+    produto_por_quantidade = ProdutoPorQuantidade.objects.filter(
+        codigo=produto_codigo).first()
+    produto_por_peso = ProdutoPorPeso.objects.filter(
+        codigo=produto_codigo).first()
 
     # Escolha o produto que foi encontrado
     if produto_por_quantidade:
@@ -51,10 +55,12 @@ def detalhar_produto(request, produto_codigo):
     }
     return render(request, 'pdvweb/produto_detail.html', context)
 
+
 @login_required
 def editar_produto(request, produto_codigo):
     try:
-        produto_por_quantidade = ProdutoPorQuantidade.objects.get(codigo=produto_codigo)
+        produto_por_quantidade = ProdutoPorQuantidade.objects.get(
+            codigo=produto_codigo)
     except ProdutoPorQuantidade.DoesNotExist:
         produto_por_quantidade = None
 
@@ -73,13 +79,15 @@ def editar_produto(request, produto_codigo):
         raise Http404("Produto não encontrado")
 
     if request.method == 'POST':
-        form = ProdutoPorQuantidadeForm(request.POST, instance=produto_por_quantidade) if produto_por_quantidade else ProdutoPorPesoForm(request.POST, instance=produto_por_peso)
+        form = ProdutoPorQuantidadeForm(request.POST, instance=produto_por_quantidade) if produto_por_quantidade else ProdutoPorPesoForm(
+            request.POST, instance=produto_por_peso)
         if form.is_valid():
             form.save()
             messages.success(request, 'Produto editado com sucesso.')
             return redirect('pdvweb:listar_produtos')
         else:
-            messages.error(request, 'O formulário não é válido. Corrija os erros abaixo.')
+            messages.error(
+                request, 'O formulário não é válido. Corrija os erros abaixo.')
 
     context = {
         'form': form,
@@ -89,15 +97,41 @@ def editar_produto(request, produto_codigo):
     return render(request, 'pdvweb/produto_edit.html', context)
 
 
-
-
 @login_required
 def search_produto(request):
     query = request.POST.get('produto_pesquisa', '')
-    produtos_por_quantidade = ProdutoPorQuantidade.objects.filter(nome__icontains=query)
+    produtos_por_quantidade = ProdutoPorQuantidade.objects.filter(
+        nome__icontains=query)
     produtos_por_peso = ProdutoPorPeso.objects.filter(nome__icontains=query)
     todos_produtos = list(produtos_por_quantidade) + list(produtos_por_peso)
     return render(request, 'pdvweb/resultado_pesquisa.html', {'todos_produtos': todos_produtos})
+
+
+def verificar_tipo_produto(request):
+    if request.method == 'POST':
+        codigo_produto = request.POST.get('codigo_produto_base', None)
+
+        if codigo_produto:
+            try:
+                # Tentar encontrar o produto pelo código
+                produto_por_quantidade = ProdutoPorQuantidade.objects.get(
+                    codigo=codigo_produto)
+                return HttpResponse("produto_por_quantidade")
+
+            except ProdutoPorQuantidade.DoesNotExist:
+                pass
+
+            try:
+                # Tentar encontrar o produto pelo código
+                produto_por_peso = ProdutoPorPeso.objects.get(
+                    codigo=codigo_produto)
+                return HttpResponse("produto_por_peso")
+
+            except ProdutoPorPeso.DoesNotExist:
+                pass
+
+    return HttpResponse("produto_nao_encontrado")
+
 
 @login_required
 def realizar_venda(request):
@@ -105,8 +139,7 @@ def realizar_venda(request):
     if venda is None:
         venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
 
-    form_quantidade = VendaItemPorQuantidadeForm()
-    form_peso = VendaItemPorPesoForm()
+    operador_atual = request.user.operador
 
     if request.method == 'POST':
         if 'quantidade' in request.POST:
@@ -114,32 +147,44 @@ def realizar_venda(request):
             if form.is_valid():
                 codigo_produto_base = form.cleaned_data['codigo_produto_base']
                 quantidade = form.cleaned_data['quantidade']
-                produto = get_object_or_404(ProdutoPorQuantidade, codigo=codigo_produto_base)
-                venda.itemvendaporquantidade_set.create(
-                    produto=produto, quantidade=quantidade, preco_unitario=produto.preco)
-                venda.calcular_valor_total()
+                produto = get_object_or_404(
+                    ProdutoPorQuantidade, codigo=codigo_produto_base)
+                with transaction.atomic():
+                    venda_item = venda.itemvendaporquantidade_set.create(
+                        produto=produto, quantidade=quantidade, preco_unitario=produto.preco)
+                    produto.remover_estoque(quantidade)
+                    venda.calcular_valor_total()
                 return redirect('pdvweb:realizar_venda')
         elif 'peso' in request.POST:
             form = VendaItemPorPesoForm(request.POST)
             if form.is_valid():
                 codigo_produto_base = form.cleaned_data['codigo_produto_base']
                 peso = form.cleaned_data['peso']
-                produto = get_object_or_404(ProdutoPorPeso, codigo=codigo_produto_base)
-                venda.itemvendaporpeso_set.create(
-                    produto=produto, peso_vendido=peso, preco_unitario=produto.preco_por_kilo)
-                venda.calcular_valor_total()
+                produto = get_object_or_404(
+                    ProdutoPorPeso, codigo=codigo_produto_base)
+                with transaction.atomic():
+                    venda_item = venda.itemvendaporpeso_set.create(
+                        produto=produto, peso_vendido=peso, preco_unitario=produto.preco_por_kilo)
+                    produto.remover_estoque_em_kilos(peso)
+                    venda.calcular_valor_total()
                 return redirect('pdvweb:realizar_venda')
 
     itens_venda_por_quantidade = venda.itemvendaporquantidade_set.all()
     itens_venda_por_peso = venda.itemvendaporpeso_set.all()
     itens_venda = list(chain(itens_venda_por_quantidade, itens_venda_por_peso))
 
+    # Calculando o valor total da venda
+    valor_total_venda = venda.valor_total
+
     context = {
-        'form_quantidade': form_quantidade,
-        'form_peso': form_peso,
         'venda': venda,
-        'itens_venda': itens_venda
+        'itens_venda': itens_venda,
+        # Passando o valor total da venda para o contexto
+        'valor_total_venda': valor_total_venda,
     }
+
+    venda.operador = operador_atual
+    venda.save()
 
     return render(request, 'pdvweb/realizar_venda.html', context)
 
@@ -175,9 +220,9 @@ def remover_item(request, item_id):
 @login_required
 def finalizar_venda(request, venda_id):
     venda = get_object_or_404(
-        Venda, id=venda_id, operador_responsavel__usuarios=request.user)
-
-    venda.finalizar_venda()
+        Venda, id=venda_id, operador=request.user)
+    operador_atual = request.user.operador
+    venda.finalizar_venda(operador_atual)
 
     return redirect(reverse('pdvweb:realizar_venda'))
 
@@ -185,7 +230,7 @@ def finalizar_venda(request, venda_id):
 @login_required
 def cancelar_venda(request, venda_id):
     venda = get_object_or_404(
-        Venda, id=venda_id, operador_responsavel__usuarios=request.user)
+        Venda, id=venda_id, operador=request.user)
     venda.cancelar_venda()
     return redirect(reverse('pdvweb:realizar_venda'))
 

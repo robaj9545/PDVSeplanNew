@@ -16,6 +16,8 @@ urlpatterns = [
          views.detalhar_produto, name='detalhar_produto'),
     path('produtos/<str:produto_codigo>/editar/',  # Usando str para aceitar o campo 'codigo'
          views.editar_produto, name='editar_produto'),
+    path('verificar-tipo-produto/', views.verificar_tipo_produto,
+         name='verificar_tipo_produto'),
 
     # VENDA
     # Adicionando a URL para a pesquisa de produto

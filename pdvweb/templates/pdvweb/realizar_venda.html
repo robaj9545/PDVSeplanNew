@@ -5,90 +5,6 @@
 {% block content %}
 
 
-<!-- Adicionar Item à Venda -->
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-6">
-            <!-- Formulário para adicionar item à venda -->
-            <div class="card">
-                <div class="card-body">
-                    <form method="post" id="adicionarItemForm">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="produto_identificador">Código do Produto:</label>
-                            <input type="text" class="form-control" id="produto_identificador"
-                                name="produto_identificador">
-                        </div>
-                        <div class="form-group">
-                            <label for="quantidade">Quantidade:</label>
-                            <input type="text" class="form-control" id="quantidade" name="quantidade">
-                        </div>
-                        <button type="submit" class="btn btn-success">Adicionar Item</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <!-- Itens da Venda -->
-            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
-                style="max-height: 400px; overflow-y: auto;">
-                <h2 class="mb-3">Itens da Venda</h2>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Produto</th>
-                            <th scope="col">Quantidade</th>
-                            <th scope="col">Preço Unitário</th>
-                            <th scope="col">Subtotal</th>
-                            <th scope="col">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody style="line-height: 1;">
-                        {% for item in itens_venda %}
-                        <tr>
-                            <td>{{ item.produto.nome }}</td>
-                            <td>{{ item.quantidade if item.produto.preco else item.peso_vendido }}</td>
-                            <td>R$ {{ item.preco_unitario }}</td>
-                            <td>R$ {{ item.subtotal }}</td>
-                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
-                                    class="btn btn-danger btn-sm">Remover</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Total da Venda -->
-    <div class="text-right col-md-11 mb-5">
-        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{
-                venda.valor_total }}</span></strong>
-    </div>
-
-    <!-- Botões de Ação -->
-    <div class="fixed-bottom mb-4">
-        <div class="container">
-            <div class="row justify-content-center">
-                {% if venda.id %}
-                <div class="col-md-auto">
-                    <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Cancelar Venda</button>
-                    </form>
-                </div>
-                <div class="col-md-auto">
-                    <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Finalizar Venda</button>
-                    </form>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
 
 
 
@@ -102,24 +18,36 @@
     </div>
 
     <div class="card">
-        <div class="card-body">
-            <form method="post" id="adicionarItemForm">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="codigo_produto_base">Código do Produto:</label>
-                    <input type="text" class="form-control" id="codigo_produto_base" name="codigo_produto_base">
+        <!-- Adicionar Item à Venda -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" id="adicionarItemForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="codigo_produto_base">Código do Produto:</label>
+                            <input type="text" class="form-control" id="codigo_produto_base" name="codigo_produto_base">
+                        </div>
+                        <div id="formulario_quantidade" style="display: none;">
+                            <!-- Formulário para produto por quantidade -->
+                            <div class="form-group">
+                                <label for="quantidade">Quantidade:</label>
+                                <input type="text" class="form-control" id="quantidade" name="quantidade">
+                            </div>
+                        </div>
+                        <div id="formulario_peso" style="display: none;">
+                            <!-- Formulário para produto por peso -->
+                            <div class="form-group">
+                                <label for="peso">Peso (em kg):</label>
+                                <input type="text" class="form-control" id="peso" name="peso">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Adicionar Item</button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label for="quantidade">Quantidade:</label>
-                    <input type="text" class="form-control" id="quantidade" name="quantidade">
-                </div>
-                <div class="form-group">
-                    <label for="peso">Peso (em kg):</label>
-                    <input type="text" class="form-control" id="peso" name="peso">
-                </div>
-                <button type="submit" class="btn btn-success">Adicionar Item</button>
-            </form>
+            </div>
         </div>
+
     </div>
 
 </div>
@@ -244,49 +172,51 @@
 
         <!-- Itens da Venda -->
         <div class="col-md-6">
-            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
+
+            <!-- Itens da Venda -->
+            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded"
                 style="max-height: 400px; overflow-y: auto;">
-                <!-- Itens da Venda -->
-                <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
-                    <h2 class="mb-3">Itens da Venda</h2>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th scope="col">Produto</th>
-                                <th scope="col">Quantidade/Peso</th>
-                                <th scope="col">Preço Unitário</th>
-                                <th scope="col">Subtotal</th>
-                                <th scope="col">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody style="line-height: 1;">
-                            {% for item in itens_venda %}
-                            <tr>
-                                <td>{{ item.produto.nome }}</td>
-                                <td>
-                                    {% if item.quantidade %}
-                                        {{ item.quantidade }}
-                                    {% else %}
-                                        {{ item.peso_vendido }} kg
-                                    {% endif %}
-                                </td>
-                                <td>R$ {{ item.preco_unitario }}</td>
-                                <td>R$ {{ item.subtotal }}</td>
-                                <td><a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm">Remover</a></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <h2 class="mb-3">Itens da Venda</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Produto</th>
+                            <th scope="col">Quantidade/Peso</th>
+                            <th scope="col">Preço Unitário</th>
+                            <th scope="col">Subtotal</th>
+                            <th scope="col">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody style="line-height: 1;">
+                        {% for item in itens_venda %}
+                        <tr>
+                            <td>{{ item.produto.nome }}</td>
+                            <td>
+                                {% if item.quantidade %}
+                                {{ item.quantidade }}
+                                {% else %}
+                                {{ item.peso_vendido }} kg
+                                {% endif %}
+                            </td>
+                            <td>R$ {{ item.preco_unitario }}</td>
+                            <td>R$ {{ item.subtotal }}</td>
+                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
+                                    class="btn btn-danger btn-sm">Remover</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+
 
         </div>
     </div>
 
     <!-- BOTA TOTAL-->
-    <div class="text-right col-md-11 mb-5">
-        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{
-                venda.valor_total }}</span></strong>
+    <div class="text-right col-md-11 mb-2">
+        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$
+            <span id="valor_total_venda">{{ valor_total_venda
+                }}</span></strong>
     </div>
     <!-- Footer PDV -->
 
@@ -333,7 +263,7 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-        
+
 
         // Script para abrir a janela modal de pesquisa
         $('#menuBtn').click(function () {
@@ -375,32 +305,91 @@
         });
 
 
+        // Script para adicionar item à venda quando pressionar Enter
+        $('#codigo_produto_base').keypress(function (event) {
+            if (event.which === 13) {
+                event.preventDefault();
+
+                var codigoProduto = $('#codigo_produto_base').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "pdvweb:verificar_tipo_produto" %}',
+                    data: {
+                        'codigo_produto_base': codigoProduto,
+                        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function (data) {
+                        // Mostra o formulário relevante com base no tipo de produto identificado
+                        if (data === 'produto_por_quantidade') {
+                            $('#formulario_quantidade').show();
+                            $('#formulario_peso').hide();
+                        } else if (data === 'produto_por_peso') {
+                            $('#formulario_quantidade').hide();
+                            $('#formulario_peso').show();
+                        }
+                    },
+                    error: function (error) {
+                        console.log('Erro ao verificar o tipo de produto:', error);
+                    }
+                });
+            }
+        });
+
         // Script para adicionar item à venda
         $('#adicionarItemForm').submit(function (e) {
             e.preventDefault();
-
+            console.log("SCRIPT DE REALIZAR VENDA FUNCIONANDO")
             var codigoProduto = $('#codigo_produto_base').val();
             var quantidade = $('#quantidade').val();
             var peso = $('#peso').val();
 
-            $.ajax({
-                type: 'POST',
-                url: '{% url "pdvweb:realizar_venda" %}',
-                data: {
-                    'codigo_produto_base': codigoProduto,
-                    'quantidade': quantidade,
-                    'peso': peso,
-                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
-                },
-                success: function (data) {
-                    console.log('Item adicionado à venda com sucesso.');
-                    window.location.reload();
-                },
-                error: function (error) {
-                    console.log('Erro ao adicionar item à venda:', error);
-                }
-            });
+
+            // Envie a solicitação AJAX com base no formulário relevante
+            if ($('#formulario_quantidade').is(':visible')) {
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "pdvweb:realizar_venda" %}',
+                    data: {
+                        'codigo_produto_base': codigoProduto,
+                        'quantidade': quantidade,
+                        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function (data) {
+                        console.log('Item adicionado à venda com sucesso.');
+                        window.location.reload();
+                    },
+                    error: function (error) {
+                        console.log('Erro ao adicionar item à venda:', error);
+                    }
+                });
+
+
+            } else if ($('#formulario_peso').is(':visible')) {
+
+
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "pdvweb:realizar_venda" %}',
+                    data: {
+                        'codigo_produto_base': codigoProduto,
+                        'peso': peso,
+                        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function (data) {
+                        console.log('Item adicionado à venda com sucesso.');
+                        window.location.reload();
+                    },
+                    error: function (error) {
+                        console.log('Erro ao adicionar item à venda:', error);
+                    }
+                });
+            }
+            console.log(data);
         });
+
 
 
 
