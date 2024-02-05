@@ -12,9 +12,9 @@ urlpatterns = [
 
     # PRODUTOS
     path('produtos/', views.listar_produtos, name='listar_produtos'),
-    path('produtos/<int:produto_id>/',
+    path('produtos/<str:produto_codigo>/',  # Usando str para aceitar o campo 'codigo'
          views.detalhar_produto, name='detalhar_produto'),
-    path('produtos/<int:produto_id>/editar/',
+    path('produtos/<str:produto_codigo>/editar/',  # Usando str para aceitar o campo 'codigo'
          views.editar_produto, name='editar_produto'),
 
     # VENDA

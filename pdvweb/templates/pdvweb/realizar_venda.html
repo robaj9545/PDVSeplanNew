@@ -101,21 +101,25 @@
         <!-- Conteúdo do modal aqui -->
     </div>
 
-    <div class="card-body">
-        <form method="post" id="adicionarItemForm">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="produto_identificador">Código do Produto:</label>
-                <br>
-                <input type="text" class="form-control" id="produto_identificador" name="produto_identificador">
-            </div>
-            <div class="form-group">
-                <label for="quantidade">Quantidade:</label>
-                <br>
-                <input type="text" class="form-control" id="quantidade" name="quantidade">
-            </div>
-            <button type="submit" class="btn btn-success">Adicionar Item</button>
-        </form>
+    <div class="card">
+        <div class="card-body">
+            <form method="post" id="adicionarItemForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="codigo_produto_base">Código do Produto:</label>
+                    <input type="text" class="form-control" id="codigo_produto_base" name="codigo_produto_base">
+                </div>
+                <div class="form-group">
+                    <label for="quantidade">Quantidade:</label>
+                    <input type="text" class="form-control" id="quantidade" name="quantidade">
+                </div>
+                <div class="form-group">
+                    <label for="peso">Peso (em kg):</label>
+                    <input type="text" class="form-control" id="peso" name="peso">
+                </div>
+                <button type="submit" class="btn btn-success">Adicionar Item</button>
+            </form>
+        </div>
     </div>
 
 </div>
@@ -242,30 +246,38 @@
         <div class="col-md-6">
             <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
                 style="max-height: 400px; overflow-y: auto;">
-                <h2 class="mb-3">Itens da Venda</h2>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Produto</th>
-                            <th scope="col">Quantidade</th>
-                            <th scope="col">Preço Unitário</th>
-                            <th scope="col">Subtotal</th>
-                            <th scope="col">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody style="line-height: 1;">
-                        {% for item in itens_venda %}
-                        <tr>
-                            <td>{{ item.produto.nome }}</td>
-                            <td>{{ item.quantidade }}</td>
-                            <td>R$ {{ item.preco_unitario }}</td>
-                            <td>R$ {{ item.subtotal }}</td>
-                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
-                                    class="btn btn-danger btn-sm">Remover</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <!-- Itens da Venda -->
+                <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
+                    <h2 class="mb-3">Itens da Venda</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">Produto</th>
+                                <th scope="col">Quantidade/Peso</th>
+                                <th scope="col">Preço Unitário</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody style="line-height: 1;">
+                            {% for item in itens_venda %}
+                            <tr>
+                                <td>{{ item.produto.nome }}</td>
+                                <td>
+                                    {% if item.quantidade %}
+                                        {{ item.quantidade }}
+                                    {% else %}
+                                        {{ item.peso_vendido }} kg
+                                    {% endif %}
+                                </td>
+                                <td>R$ {{ item.preco_unitario }}</td>
+                                <td>R$ {{ item.subtotal }}</td>
+                                <td><a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm">Remover</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -321,7 +333,7 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-        console.log('Script de pesquisa de produto está sendo executado.');
+        
 
         // Script para abrir a janela modal de pesquisa
         $('#menuBtn').click(function () {
@@ -367,20 +379,22 @@
         $('#adicionarItemForm').submit(function (e) {
             e.preventDefault();
 
-            var produtoIdentificador = $('#produto_identificador').val();
+            var codigoProduto = $('#codigo_produto_base').val();
             var quantidade = $('#quantidade').val();
+            var peso = $('#peso').val();
 
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:realizar_venda" %}',
                 data: {
-                    'produto_identificador': produtoIdentificador,
+                    'codigo_produto_base': codigoProduto,
                     'quantidade': quantidade,
+                    'peso': peso,
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
                 },
                 success: function (data) {
                     console.log('Item adicionado à venda com sucesso.');
-                    window.location.reload(); // Atualizar a página após adicionar o item à venda
+                    window.location.reload();
                 },
                 error: function (error) {
                     console.log('Erro ao adicionar item à venda:', error);

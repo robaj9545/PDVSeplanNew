@@ -15,15 +15,25 @@
             </tr>
         </thead>
         <tbody>
-            {% for produto in produtos %}
+            {% for produto in todos_produtos %}
                 <tr>
                     <td>{{ produto.nome }}</td>
-                    <td>R$ {{ produto.preco }}</td>
+
+                    {% if produto.preco %}
+                        <td>R$ {{ produto.preco }}</td>
+                    {% elif produto.preco_por_kilo %}
+                        <td>R$ {{ produto.preco_por_kilo }}</td>
+                    {% endif %}
+                    
                     <td>{{ produto.categoria.nome }}</td>
-                    <td>{{ produto.estoque }}</td>
+                    {% if produto.preco %}
+                        <td>{{ produto.estoque }}</td>
+                    {% elif produto.preco_por_kilo %}
+                        <td>{{ produto.estoque_em_kilos }} kg</td>
+                    {% endif %}
                     <td>
-                        <a href="{% url 'pdvweb:detalhar_produto' produto.id %}" class="btn btn-info btn-sm">Detalhes</a>
-                        <a href="{% url 'pdvweb:editar_produto' produto.id %}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{% url 'pdvweb:detalhar_produto' produto.codigo %}" class="btn btn-info btn-sm">Detalhes</a>
+                        <a href="{% url 'pdvweb:editar_produto' produto.codigo %}" class="btn btn-warning btn-sm">Editar</a>
                     </td>
                 </tr>
             {% endfor %}

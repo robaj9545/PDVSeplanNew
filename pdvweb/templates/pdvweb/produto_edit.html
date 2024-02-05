@@ -4,9 +4,13 @@
 
 {% block content %}
     <h2>Editar Produto</h2>
-    <form method="post" action="{% url 'pdvweb:editar_produto' produto.id %}">
+    <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% if form %}
+            {{ form.as_p }}
+        {% else %}
+            <p>Não foi possível carregar o formulário para este produto.</p>
+        {% endif %}
         <button type="submit" class="btn btn-primary">Salvar Alterações</button>
         <a href="{% url 'pdvweb:listar_produtos' %}" class="btn btn-secondary">Cancelar</a>
     </form>

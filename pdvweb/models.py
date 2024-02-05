@@ -196,6 +196,9 @@ class Venda(models.Model):
     valor_total = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.0)
     desconto = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+    operador = models.ForeignKey('Operador', on_delete=models.SET_NULL, null=True)
+    cliente = models.ForeignKey('Cliente', on_delete=models.SET_NULL, null=True)
+
 
     def __str__(self):
         return f'Venda {self.id} - {self.data} ({self.get_status_display()})'
