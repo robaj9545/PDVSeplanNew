@@ -6,6 +6,9 @@ todo projeto
 python manage.py makemigrations
 python manage.py migrate
 
+migracoes do zero
+python manage.py migrate pdvweb zero
+
 ATIVAR MAQUINA VIRTUAL
 pip install virtualenv
 python -m venv venv

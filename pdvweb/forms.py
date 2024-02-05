@@ -2,11 +2,11 @@
 
 from django import forms
 from django.contrib.auth.models import AbstractUser, Group
-from .models import ItemVenda, ItemVendaPorPeso, Produto, ProdutoPorPeso, Venda, Categoria, CustomUser, Operador, Cliente
+from .models import ProdutoPorQuantidade, ProdutoPorPeso, Venda, Categoria, CustomUser, Operador, Cliente, ProdutoBase
 from .models import CustomUser
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.shortcuts import get_object_or_404
 from decimal import Decimal
-
 
 
 class ClienteForm(forms.ModelForm):
@@ -19,93 +19,14 @@ class PesquisarProdutoForm(forms.Form):
     produto_nome = forms.CharField(label='Nome do Produto')
 
 
-class AdicionarItemForm(forms.Form):
-    produto_identificador = forms.CharField(label='Nome ou ID do Produto')
-    quantidade = forms.DecimalField(label='Quantidade', min_value=0.01, max_digits=10, decimal_places=2)
-
-    def clean_produto_identificador(self):
-        identificador = self.cleaned_data['produto_identificador']
-        try:
-            produto = Produto.objects.get(id=identificador)
-        except Produto.DoesNotExist:
-            try:
-                produto = Produto.objects.get(nome__iexact=identificador)
-            except Produto.DoesNotExist:
-                raise forms.ValidationError("Produto não encontrado.")
-        return produto
-
-
-class AdicionarItemPorPesoForm(forms.Form):
-    produto_identificador = forms.CharField(label='Nome ou ID do Produto')
-    peso_vendido = forms.DecimalField(label='Peso Vendido (kg)', min_value=0.001, max_digits=10, decimal_places=3)
-
-    def clean_produto_identificador(self):
-        identificador = self.cleaned_data['produto_identificador']
-        try:
-            produto = ProdutoPorPeso.objects.get(id=identificador)
-        except ProdutoPorPeso.DoesNotExist:
-            try:
-                produto = ProdutoPorPeso.objects.get(nome__iexact=identificador)
-            except ProdutoPorPeso.DoesNotExist:
-                raise forms.ValidationError("Produto não encontrado.")
-        return produto
-
-
-class ProdutoForm(forms.ModelForm):
-    class Meta:
-        model = Produto
-        fields = ['nome', 'descricao', 'preco', 'categoria', 'estoque']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Produto'}),
-            'descricao': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Descrição'}),
-            'preco': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Preço'}),
-            'categoria': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Selecione a Categoria'}),
-            'estoque': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Estoque'}),
-        }
-
-    def clean_preco(self):
-        preco = self.cleaned_data['preco']
-        if preco < 0:
-            raise forms.ValidationError("O preço não pode ser negativo.")
-        return preco
-
-
-class ProdutoPorPesoForm(forms.ModelForm):
-    class Meta:
-        model = ProdutoPorPeso
-        fields = ['nome', 'descricao', 'preco_por_kilo', 'categoria', 'estoque_em_kilos']
-        widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Produto'}),
-            'descricao': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Descrição'}),
-            'preco_por_kilo': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Preço por Quilo'}),
-            'categoria': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Selecione a Categoria'}),
-            'estoque_em_kilos': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Estoque em Quilos'}),
-        }
-
-    def clean_preco_por_kilo(self):
-        preco_por_kilo = self.cleaned_data['preco_por_kilo']
-        if preco_por_kilo < 0:
-            raise forms.ValidationError("O preço por quilo não pode ser negativo.")
-        return preco_por_kilo
-
-
 class VendaForm(forms.ModelForm):
-    itens_venda = forms.ModelMultipleChoiceField(
-        queryset=Produto.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'})
-    )
-
-    itens_venda_peso = forms.ModelMultipleChoiceField(
-        queryset=ProdutoPorPeso.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'})
-    )
-
     class Meta:
         model = Venda
-        fields = ['itens_venda', 'itens_venda_peso', 'desconto']
-        widgets = {
-            'desconto': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
-        }
+        fields = ['desconto']
+
+
+class ProdutoBaseForm(forms.Form):
+    codigo = forms.CharField(label='Código do Produto Base', max_length=10)
 
 
 class CategoriaForm(forms.ModelForm):
@@ -116,9 +37,48 @@ class CategoriaForm(forms.ModelForm):
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da Categoria'}),
         }
 
-    def clean_nome(self):
-        nome = self.cleaned_data['nome']
-        return nome
+
+class VendaItemPorQuantidadeForm(forms.Form):
+    codigo_produto_base = forms.CharField(
+        label='Código do Produto Base', max_length=10)
+    quantidade = forms.IntegerField(label='Quantidade', min_value=1)
+
+
+class VendaItemPorPesoForm(forms.Form):
+    codigo_produto_base = forms.CharField(
+        label='Código do Produto Base', max_length=10)
+    peso = forms.DecimalField(
+        label='Peso (kg)', min_value=0.001, max_digits=10, decimal_places=3)
+
+
+class ProdutoPorQuantidadeForm(forms.ModelForm):
+    class Meta:
+        model = ProdutoPorQuantidade
+        fields = ['codigo', 'nome', 'descricao',
+                  'preco', 'categoria', 'estoque']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código do Produto'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Produto'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Descrição'}),
+            'preco': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Preço'}),
+            'categoria': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Selecione a Categoria'}),
+            'estoque': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Estoque'}),
+        }
+
+
+class ProdutoPorPesoForm(forms.ModelForm):
+    class Meta:
+        model = ProdutoPorPeso
+        fields = ['codigo', 'nome', 'descricao',
+                  'preco_por_kilo', 'categoria', 'estoque_em_kilos']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código do Produto'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Produto'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Descrição'}),
+            'preco_por_kilo': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Preço por Quilo'}),
+            'categoria': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Selecione a Categoria'}),
+            'estoque_em_kilos': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Estoque em Quilos'}),
+        }
 
 
 class RegistroOperadorForm(UserCreationForm):

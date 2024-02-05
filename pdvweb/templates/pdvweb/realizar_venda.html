@@ -5,25 +5,96 @@
 {% block content %}
 
 
+<!-- Adicionar Item à Venda -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Formulário para adicionar item à venda -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" id="adicionarItemForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="produto_identificador">Código do Produto:</label>
+                            <input type="text" class="form-control" id="produto_identificador"
+                                name="produto_identificador">
+                        </div>
+                        <div class="form-group">
+                            <label for="quantidade">Quantidade:</label>
+                            <input type="text" class="form-control" id="quantidade" name="quantidade">
+                        </div>
+                        <button type="submit" class="btn btn-success">Adicionar Item</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-<form method="post" id="adicionarItemForm">
-    {% csrf_token %}
-    <div class="form-group">
-        <label for="produto_identificador">Nome ou ID do Produto:</label>
-        <br>
-        {{ adicionar_item_form.produto_identificador }}
+        <div class="col-md-6">
+            <!-- Itens da Venda -->
+            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
+                style="max-height: 400px; overflow-y: auto;">
+                <h2 class="mb-3">Itens da Venda</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Produto</th>
+                            <th scope="col">Quantidade</th>
+                            <th scope="col">Preço Unitário</th>
+                            <th scope="col">Subtotal</th>
+                            <th scope="col">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody style="line-height: 1;">
+                        {% for item in itens_venda %}
+                        <tr>
+                            <td>{{ item.produto.nome }}</td>
+                            <td>{{ item.quantidade if item.produto.preco else item.peso_vendido }}</td>
+                            <td>R$ {{ item.preco_unitario }}</td>
+                            <td>R$ {{ item.subtotal }}</td>
+                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
+                                    class="btn btn-danger btn-sm">Remover</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label for="peso_vendido">Peso Vendido (kg):</label>
-        <br>
-        {{ adicionar_item_form.peso_vendido }}
-    </div>                        
-    <button type="submit" class="btn btn-success">Adicionar Item</button>
-</form>
+
+    <!-- Total da Venda -->
+    <div class="text-right col-md-11 mb-5">
+        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{
+                venda.valor_total }}</span></strong>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="fixed-bottom mb-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                {% if venda.id %}
+                <div class="col-md-auto">
+                    <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Cancelar Venda</button>
+                    </form>
+                </div>
+                <div class="col-md-auto">
+                    <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Finalizar Venda</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 
 <!-- Adicionar Item à Venda -->
-<div class="col-md-6">            
+<div class="col-md-6">
     <!-- Modal para pesquisar produto -->
     <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
         aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
@@ -34,33 +105,30 @@
         <form method="post" id="adicionarItemForm">
             {% csrf_token %}
             <div class="form-group">
-                <label for="produto_identificador">Nome ou ID do Produto:</label>
+                <label for="produto_identificador">Código do Produto:</label>
                 <br>
-                {{ adicionar_item_form.produto_identificador }}
+                <input type="text" class="form-control" id="produto_identificador" name="produto_identificador">
             </div>
             <div class="form-group">
                 <label for="quantidade">Quantidade:</label>
                 <br>
-                {{ adicionar_item_form.quantidade }}
+                <input type="text" class="form-control" id="quantidade" name="quantidade">
             </div>
-            <div class="form-group">
-                <label for="peso_vendido">Peso Vendido (kg):</label>
-                <br>
-                {{ adicionar_item_por_peso_form.peso_vendido }}
-            </div>                        
             <button type="submit" class="btn btn-success">Adicionar Item</button>
-        </form>        
-    </div>           
+        </form>
+    </div>
+
 </div>
+
 
 
 <div class="container mt-4">
     <div class="row">
-        
+
         <div class="col-md-6">
-            
+
             <!-- Dentro do bloco <body> -->
-                <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
+            <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
                 aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -81,7 +149,7 @@
                                 </div>
 
                             </form>
-                            <div id="resultadosPesquisa" ></div>
+                            <div id="resultadosPesquisa"></div>
                         </div>
                     </div>
                 </div>
@@ -97,8 +165,8 @@
             </div>
 
             <br>
-            
-            
+
+
             <!-- Operador e Cliente -->
             <div class="mt-4">
                 <div class="form-group">
@@ -109,66 +177,71 @@
                     <label for="cliente">Cliente:</label>
                     <div class="form-inline">
                         {% if venda.cliente %}
-                            <span id="nome_cliente_label">{{ venda.cliente.nome }}</span>
-                            <button id="trocarClienteBtn" class="btn btn-secondary">Trocar Cliente</button>
+                        <span id="nome_cliente_label">{{ venda.cliente.nome }}</span>
+                        <button id="trocarClienteBtn" class="btn btn-secondary">Trocar Cliente</button>
                         {% else %}
-                            <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
-                            <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
-                            <button id="verificarClienteBtn" class="btn btn-primary">Verificar</button>
+                        <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
+                        <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
+                        <button id="verificarClienteBtn" class="btn btn-primary">Verificar</button>
                         {% endif %}
                     </div>
-                </div>                
+                </div>
             </div>
 
 
 
-                <!-- Modal para cadastrar cliente -->
-                <div class="modal fade" id="modal_cadastro_cliente" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel">Cadastrar Cliente</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-
-
-                            <div class="modal-body">
-                                <form id="form_cadastro_cliente">
-                                    <!-- Inclua o token CSRF -->
-                                    {% csrf_token %}
-                                    <!-- Campos do formulário de cadastro -->
-                                    <div class="form-group">
-                                        <label for="nome_cliente_cadastro">Nome:</label>
-                                        <input type="text" class="form-control" id="nome_cliente_cadastro" placeholder="Nome">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="email_cliente_cadastro">Email:</label>
-                                        <input type="email" class="form-control" id="email_cliente_cadastro" placeholder="Email">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="telefone_cliente_cadastro">Telefone:</label>
-                                        <input type="text" class="form-control" id="telefone_cliente_cadastro" placeholder="Telefone">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="cpf_cliente_cadastro">CPF:</label>
-                                        <input type="text" class="form-control" id="cpf_cliente_cadastro" placeholder="CPF">
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Cadastrar</button>
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                                </form>
-                            </div>
-                            
+            <!-- Modal para cadastrar cliente -->
+            <div class="modal fade" id="modal_cadastro_cliente" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Cadastrar Cliente</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
+
+
+                        <div class="modal-body">
+                            <form id="form_cadastro_cliente">
+                                <!-- Inclua o token CSRF -->
+                                {% csrf_token %}
+                                <!-- Campos do formulário de cadastro -->
+                                <div class="form-group">
+                                    <label for="nome_cliente_cadastro">Nome:</label>
+                                    <input type="text" class="form-control" id="nome_cliente_cadastro"
+                                        placeholder="Nome">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email_cliente_cadastro">Email:</label>
+                                    <input type="email" class="form-control" id="email_cliente_cadastro"
+                                        placeholder="Email">
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefone_cliente_cadastro">Telefone:</label>
+                                    <input type="text" class="form-control" id="telefone_cliente_cadastro"
+                                        placeholder="Telefone">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cpf_cliente_cadastro">CPF:</label>
+                                    <input type="text" class="form-control" id="cpf_cliente_cadastro" placeholder="CPF">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Cadastrar</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                            </form>
+                        </div>
+
                     </div>
                 </div>
-                <!-- Fim do modal de cadastro de cliente -->
+            </div>
+            <!-- Fim do modal de cadastro de cliente -->
         </div>
 
         <!-- Itens da Venda -->
         <div class="col-md-6">
-            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
+            <div id="itens-da-venda" class="mb-4 shadow p-3 bg-light rounded"
+                style="max-height: 400px; overflow-y: auto;">
                 <h2 class="mb-3">Itens da Venda</h2>
                 <table class="table table-striped">
                     <thead>
@@ -187,52 +260,54 @@
                             <td>{{ item.quantidade }}</td>
                             <td>R$ {{ item.preco_unitario }}</td>
                             <td>R$ {{ item.subtotal }}</td>
-                            <td><a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm">Remover</a></td>
+                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
+                                    class="btn btn-danger btn-sm">Remover</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
+
         </div>
     </div>
 
     <!-- BOTA TOTAL-->
     <div class="text-right col-md-11 mb-5">
-        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{ venda.valor_total }}</span></strong>
+        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span id="valor_total">{{
+                venda.valor_total }}</span></strong>
     </div>
-            <!-- Footer PDV -->
-            
-            <div class="fixed-bottom mb-4"> <!-- Posiciona os botões na parte inferior da tela com um espaço de margem -->
-                <div class="container"> <!-- Container para centralizar os elementos -->
-                    <div class="row justify-content-center"> <!-- Centraliza os elementos na horizontal -->
-            
-                        {% if venda.id %}
-                        <div class="col-md-auto"> <!-- Coluna com largura automática -->
-                            <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Cancelar Venda</button>
-                            </form>
-                        </div>
-            
-                        <div class="col-md-auto"> <!-- Coluna com largura automática -->
-                            <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary">Finalizar Venda</button>
-                            </form>
-                        </div>
-                        {% endif %}
-            
-                    </div>
+    <!-- Footer PDV -->
+
+    <div class="fixed-bottom mb-4"> <!-- Posiciona os botões na parte inferior da tela com um espaço de margem -->
+        <div class="container"> <!-- Container para centralizar os elementos -->
+            <div class="row justify-content-center"> <!-- Centraliza os elementos na horizontal -->
+
+                {% if venda.id %}
+                <div class="col-md-auto"> <!-- Coluna com largura automática -->
+                    <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Cancelar Venda</button>
+                    </form>
                 </div>
+
+                <div class="col-md-auto"> <!-- Coluna com largura automática -->
+                    <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Finalizar Venda</button>
+                    </form>
+                </div>
+                {% endif %}
+
             </div>
-            
         </div>
-
-
-
-
     </div>
+
+</div>
+
+
+
+
+</div>
 </div>
 </div>
 
@@ -258,12 +333,12 @@
         $('#pesquisarProdutoModal').on('hide.bs.modal', function () {
             $('#produtoPesquisa').val(''); // Limpa o valor do campo de pesquisa
             $('#resultadosPesquisa').html(''); // Limpa o conteúdo da div de resultados
-            
+
         });
 
-        
 
-       
+
+
         // Script para pesquisa de produtos conforme digitação
         $('#produtoPesquisa').keyup(function () {
             var query = $(this).val(); // Obtém o valor atual do campo de pesquisa
@@ -287,30 +362,36 @@
             });
         });
 
-        
 
-        
-        // Script para adicionar itens à venda
-        // Script para adicionar itens à venda
+        // Script para adicionar item à venda
         $('#adicionarItemForm').submit(function (e) {
             e.preventDefault();
-            var formData = $(this).serialize();
+
+            var produtoIdentificador = $('#produto_identificador').val();
+            var quantidade = $('#quantidade').val();
+
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:realizar_venda" %}',
-                data: formData,
+                data: {
+                    'produto_identificador': produtoIdentificador,
+                    'quantidade': quantidade,
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                },
                 success: function (data) {
-                    $('#itens-da-venda').html(data.html_itens_venda);
-                    $('#valor_total').text('R$ ' + data.valor_total);
+                    console.log('Item adicionado à venda com sucesso.');
+                    window.location.reload(); // Atualizar a página após adicionar o item à venda
                 },
                 error: function (error) {
-                    console.log(error);
+                    console.log('Erro ao adicionar item à venda:', error);
                 }
             });
         });
 
 
-        
+
+
+
         // Função para verificar o cliente e atualizar a interface
         $('#verificarClienteBtn').click(function () {
             var nomeCliente = $('#nome_cliente').val();
@@ -355,7 +436,7 @@
         });
 
 
-        
+
         // Script para trocar cliente
         $('#trocarClienteBtn').click(function () {
             $.ajax({
@@ -380,7 +461,7 @@
         // Função para cadastrar cliente
         $('#form_cadastro_cliente').submit(function (e) {
             e.preventDefault();
-            
+
             // Obter os dados do formulário
             var formData = {
                 'nome': $('#nome_cliente_cadastro').val(),
