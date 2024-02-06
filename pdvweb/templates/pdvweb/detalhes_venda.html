@@ -4,7 +4,8 @@
   <h1>Detalhes da Venda #{{ venda.id }}</h1>
   <p><strong>Data:</strong> {{ venda.data }}</p>
   <p><strong>Status:</strong> {{ venda.get_status_display }}</p>
-  <p><strong>Operador Responsável:</strong> {% if venda.operador_responsavel %}{{ venda.operador_responsavel.nome }}{% else %}N/A{% endif %}</p>
+  <p><strong>Operador Responsável:</strong> {% if venda.operador %}{{ venda.operador.nome }}{% else %}N/A{% endif %}</p>
+  <p><strong>Cliente:</strong> {% if venda.cliente %}{{ venda.cliente.nome }}{% else %}N/A{% endif %}</p>
   <p><strong>Itens da Venda:</strong></p>
   <ul>
     {% for item in venda.itens_venda.all %}

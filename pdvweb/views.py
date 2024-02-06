@@ -17,6 +17,8 @@ from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Sum
+
 
 
 def is_operador(user):
@@ -103,8 +105,15 @@ def search_produto(request):
     produtos_por_quantidade = ProdutoPorQuantidade.objects.filter(
         nome__icontains=query)
     produtos_por_peso = ProdutoPorPeso.objects.filter(nome__icontains=query)
+    
     todos_produtos = list(produtos_por_quantidade) + list(produtos_por_peso)
+    
+    # Ordenar os produtos pelo código em ordem decrescente
+    todos_produtos = sorted(todos_produtos, key=lambda produto: produto.codigo, reverse=False)
+    
     return render(request, 'pdvweb/resultado_pesquisa.html', {'todos_produtos': todos_produtos})
+
+
 
 
 def verificar_tipo_produto(request):
@@ -154,7 +163,7 @@ def realizar_venda(request):
                         produto=produto, quantidade=quantidade, preco_unitario=produto.preco)
                     produto.remover_estoque(quantidade)
                     venda.calcular_valor_total()
-                return redirect('pdvweb:realizar_venda')
+                return JsonResponse({'valor_total_venda': venda.valor_total})  # Retorna o valor total da venda via JSON
         elif 'peso' in request.POST:
             form = VendaItemPorPesoForm(request.POST)
             if form.is_valid():
@@ -167,27 +176,24 @@ def realizar_venda(request):
                         produto=produto, peso_vendido=peso, preco_unitario=produto.preco_por_kilo)
                     produto.remover_estoque_em_kilos(peso)
                     venda.calcular_valor_total()
-                return redirect('pdvweb:realizar_venda')
+                return JsonResponse({'valor_total_venda': venda.valor_total})  # Retorna o valor total da venda via JSON
 
     itens_venda_por_quantidade = venda.itemvendaporquantidade_set.all()
     itens_venda_por_peso = venda.itemvendaporpeso_set.all()
     itens_venda = list(chain(itens_venda_por_quantidade, itens_venda_por_peso))
 
-    # Calculando o valor total da venda
-    valor_total_venda = venda.valor_total
 
     context = {
         'venda': venda,
         'itens_venda': itens_venda,
-        # Passando o valor total da venda para o contexto
-        'valor_total_venda': valor_total_venda,
+        'valor_total_venda': venda.valor_total,  # Passando o valor total da venda para o contexto
     }
 
+    
     venda.operador = operador_atual
     venda.save()
 
     return render(request, 'pdvweb/realizar_venda.html', context)
-
 
 @login_required
 def remover_item(request, item_id):
@@ -220,9 +226,9 @@ def remover_item(request, item_id):
 @login_required
 def finalizar_venda(request, venda_id):
     venda = get_object_or_404(
-        Venda, id=venda_id, operador=request.user)
-    operador_atual = request.user.operador
-    venda.finalizar_venda(operador_atual)
+        Venda, id=venda_id)
+    
+    venda.finalizar_venda()
 
     return redirect(reverse('pdvweb:realizar_venda'))
 
@@ -230,7 +236,7 @@ def finalizar_venda(request, venda_id):
 @login_required
 def cancelar_venda(request, venda_id):
     venda = get_object_or_404(
-        Venda, id=venda_id, operador=request.user)
+        Venda, id=venda_id)
     venda.cancelar_venda()
     return redirect(reverse('pdvweb:realizar_venda'))
 

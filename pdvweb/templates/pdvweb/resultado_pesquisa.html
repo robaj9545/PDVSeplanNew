@@ -4,25 +4,33 @@
     <table class="table">
       <thead class="bg-secondary text-light" style="line-height: 1;">
         <tr>
-          <th>ID</th>
+          <th>Codigo</th>
           <th>Nome</th>
           <th>Estoque</th>
           <th>Descrição</th>
           <th>Preço</th>
-          <th>Categoria</th>
-          <th>Vendido por Peso</th> <!-- Nova coluna -->
+          
+           <!-- Nova coluna -->
         </tr>
       </thead>
       <tbody style="line-height: 1;">
-        {% for produto in produtos %}
+        {% for produto in todos_produtos %}
         <tr style="background-color: #f8f9fa;">
-          <td>{{ produto.id }}</td>
+          <td>{{ produto.codigo }}</td>
           <td>{{ produto.nome }}</td>
-          <td>{{ produto.estoque }}</td>
+          {% if produto.preco %}
+            <td>{{ produto.estoque }} UN</td>
+          {% elif produto.preco_por_kilo %}
+            <td>{{ produto.estoque_em_kilos }} KG</td>
+          {% endif %}
           <td>{{ produto.descricao }}</td>
-          <td>R$ {{ produto.preco }}</td>
-          <td>{{ produto.categoria }}</td>
-          <td>{% if produto.vendido_por_peso %}Sim{% else %}Não{% endif %}</td> <!-- Mostra "Sim" se vendido por peso, senão "Não" -->
+          {% if produto.preco %}
+            <td>R$ {{ produto.preco }} UN</td>
+          {% elif produto.preco_por_kilo %}
+            <td>R$ {{ produto.preco_por_kilo }} KG</td>
+          {% endif %}
+          
+           <!-- Mostra "Sim" se vendido por peso, senão "Não" -->
         </tr>
         {% endfor %}
       </tbody>      

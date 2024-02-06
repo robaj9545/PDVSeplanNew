@@ -6,20 +6,62 @@
 
 
 
-
-
-
-<!-- Adicionar Item à Venda -->
-<div class="col-md-6">
     <!-- Modal para pesquisar produto -->
-    <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
-        aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
+    
         <!-- Conteúdo do modal aqui -->
-    </div>
+            <!-- Dentro do bloco <body> -->
+                <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
+                aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" >
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pesquisarProdutoModalLabel">Consulta Produto</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Formulário de pesquisa de produtos -->
+                            <form method="post" id="pesquisarProdutoForm">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="produtoPesquisa">Digite o Nome do Produto:</label>
+                                    <input type="text" class="form-control" id="produtoPesquisa"
+                                        name="produto_pesquisa">
+                                </div>
 
-    <div class="card">
-        <!-- Adicionar Item à Venda -->
-        <div class="col-md-6">
+                            </form>
+                            <div id="resultadosPesquisa"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+
+
+
+
+
+<div class="container mt-4">
+    <div class="row">
+
+        <div class="col-md-3">
+
+            
+
+            <!-- Pesquisar Produto -->
+
+
+            <div class="input-group-prepend">
+                <button type="button" class="btn btn-outline-secondary" id="menuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <br>
+
+            <!-- Adicionar Item à Venda -->
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-body">
                     <form method="post" id="adicionarItemForm">
@@ -48,56 +90,6 @@
             </div>
         </div>
 
-    </div>
-
-</div>
-
-
-
-<div class="container mt-4">
-    <div class="row">
-
-        <div class="col-md-6">
-
-            <!-- Dentro do bloco <body> -->
-            <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
-                aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="pesquisarProdutoModalLabel">Consulta Produto</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Formulário de pesquisa de produtos -->
-                            <form method="post" id="pesquisarProdutoForm">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    <label for="produtoPesquisa">Digite o Nome do Produto:</label>
-                                    <input type="text" class="form-control" id="produtoPesquisa"
-                                        name="produto_pesquisa">
-                                </div>
-
-                            </form>
-                            <div id="resultadosPesquisa"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pesquisar Produto -->
-
-
-            <div class="input-group-prepend">
-                <button type="button" class="btn btn-outline-secondary" id="menuBtn">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-
-            <br>
-
 
             <!-- Operador e Cliente -->
             <div class="mt-4">
@@ -110,10 +102,12 @@
                     <div class="form-inline">
                         {% if venda.cliente %}
                         <span id="nome_cliente_label">{{ venda.cliente.nome }}</span>
+                        <br>
                         <button id="trocarClienteBtn" class="btn btn-secondary">Trocar Cliente</button>
                         {% else %}
                         <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
                         <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
+                        <br>
                         <button id="verificarClienteBtn" class="btn btn-primary">Verificar</button>
                         {% endif %}
                     </div>
@@ -171,53 +165,56 @@
         </div>
 
         <!-- Itens da Venda -->
-        <div class="col-md-6">
+        <div class="col-md-9">
 
             <!-- Itens da Venda -->
-            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded"
-                style="max-height: 400px; overflow-y: auto;">
+            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
                 <h2 class="mb-3">Itens da Venda</h2>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th scope="col">Produto</th>
-                            <th scope="col">Quantidade/Peso</th>
-                            <th scope="col">Preço Unitário</th>
-                            <th scope="col">Subtotal</th>
-                            <th scope="col">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody style="line-height: 1;">
-                        {% for item in itens_venda %}
-                        <tr>
-                            <td>{{ item.produto.nome }}</td>
-                            <td>
-                                {% if item.quantidade %}
-                                {{ item.quantidade }}
-                                {% else %}
-                                {{ item.peso_vendido }} kg
-                                {% endif %}
-                            </td>
-                            <td>R$ {{ item.preco_unitario }}</td>
-                            <td>R$ {{ item.subtotal }}</td>
-                            <td><a href="{% url 'pdvweb:remover_item' item.id %}"
-                                    class="btn btn-danger btn-sm">Remover</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-striped" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th scope="col">Produto</th>
+                                <th scope="col">Quantidade/Peso</th>
+                                <th scope="col">Preço Unitário</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody style="line-height: 1;">
+                            {% for item in itens_venda %}
+                            <tr>
+                                <td>{{ item.produto.nome }}</td>
+                                <td>
+                                    {% if item.quantidade %}
+                                    {{ item.quantidade }}
+                                    {% else %}
+                                    {{ item.peso_vendido }} kg
+                                    {% endif %}
+                                </td>
+                                <td>R$ {{ item.preco_unitario }}</td>
+                                <td>R$ {{ item.subtotal }}</td>
+                                <td><a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm">Remover</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
 
 
         </div>
     </div>
 
     <!-- BOTA TOTAL-->
-    <div class="text-right col-md-11 mb-2">
+    <!-- Valor total da venda -->
+    <div class="text-right col-md-12 mb-1">
         <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$
-            <span id="valor_total_venda">{{ valor_total_venda
-                }}</span></strong>
+            <span id="valor_total_venda">{{ valor_total_venda }}</span>
+        </strong>
     </div>
+
     <!-- Footer PDV -->
 
     <div class="fixed-bottom mb-4"> <!-- Posiciona os botões na parte inferior da tela com um espaço de margem -->
@@ -339,15 +336,12 @@
         // Script para adicionar item à venda
         $('#adicionarItemForm').submit(function (e) {
             e.preventDefault();
-            console.log("SCRIPT DE REALIZAR VENDA FUNCIONANDO")
             var codigoProduto = $('#codigo_produto_base').val();
             var quantidade = $('#quantidade').val();
             var peso = $('#peso').val();
 
-
             // Envie a solicitação AJAX com base no formulário relevante
             if ($('#formulario_quantidade').is(':visible')) {
-
                 $.ajax({
                     type: 'POST',
                     url: '{% url "pdvweb:realizar_venda" %}',
@@ -358,18 +352,15 @@
                     },
                     success: function (data) {
                         console.log('Item adicionado à venda com sucesso.');
-                        window.location.reload();
+                        // Atualize a seção do HTML que exibe o valor total da venda
+                        $('#valor_total_venda').text(data.valor_total_venda);
+                        window.location.reload(); // Se necessário
                     },
                     error: function (error) {
                         console.log('Erro ao adicionar item à venda:', error);
                     }
                 });
-
-
             } else if ($('#formulario_peso').is(':visible')) {
-
-
-
                 $.ajax({
                     type: 'POST',
                     url: '{% url "pdvweb:realizar_venda" %}',
@@ -380,14 +371,15 @@
                     },
                     success: function (data) {
                         console.log('Item adicionado à venda com sucesso.');
-                        window.location.reload();
+                        // Atualize a seção do HTML que exibe o valor total da venda
+                        $('#valor_total_venda').text(data.valor_total_venda);
+                        window.location.reload(); // Se necessário
                     },
                     error: function (error) {
                         console.log('Erro ao adicionar item à venda:', error);
                     }
                 });
             }
-            console.log(data);
         });
 
 

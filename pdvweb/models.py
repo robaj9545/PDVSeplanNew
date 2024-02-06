@@ -224,14 +224,13 @@ class Venda(models.Model):
                                desconto_decimal, Decimal('0.0'))
         self.save()
 
-    def finalizar_venda(self, operador):
+    def finalizar_venda(self):
         with transaction.atomic():
             for item in self.itemvendaporquantidade_set.all():
                 item.produto.remover_estoque(item.quantidade)
             for item_peso in self.itemvendaporpeso_set.all():
                 item_peso.produto.remover_estoque_em_kilos(
                     item_peso.peso_vendido)
-            self.operador = operador
             self.status = self.STATUS_CONCLUIDA
             self.save()
 
