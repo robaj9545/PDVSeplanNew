@@ -17,14 +17,15 @@
         <div class="row">
             <div class="col-md-12 mb-3">
                 {% if user.is_authenticated %}
-                <button class="btn btn-outline-secondary ml-2" onclick="goBack()">Voltar</button>
+                <button id="voltar" class="btn btn-outline-secondary ml-2"
+                    onclick="goBack()"><strong>voltar</strong></button>
 
 
                 <div class="float-right mx-2">
 
-                    <p class="d-inline-block">Bem-vindo, {{ user.username }}!</p>
+                    <p class="d-inline-block"><strong>Bem-vindo, {{ user.username }}!</strong></p>
                     {% if user.operador %}
-                    <span class="badge badge-primary ml-2">Operador</span>
+                    <span class="badge badge-primary p-1 ml-2"><strong>Operador</strong></span>
                     {% endif %}
                     <!-- Adicione o botão de logout aqui -->
                     <a href="{% url 'pdvweb:logout_view' %}" class="btn btn-outline-danger ml-2">Logout</a>

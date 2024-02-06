@@ -6,115 +6,93 @@
 
 
 
-    <!-- Modal para pesquisar produto -->
-    
-        <!-- Conteúdo do modal aqui -->
-            <!-- Dentro do bloco <body> -->
-                <div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
-                aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content" >
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="pesquisarProdutoModalLabel">Consulta Produto</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Formulário de pesquisa de produtos -->
-                            <form method="post" id="pesquisarProdutoForm">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    <label for="produtoPesquisa">Digite o Nome do Produto:</label>
-                                    <input type="text" class="form-control" id="produtoPesquisa"
-                                        name="produto_pesquisa">
-                                </div>
-
-                            </form>
-                            <div id="resultadosPesquisa"></div>
-                        </div>
-                    </div>
-                </div>
+<!-- Modal para pesquisar produto -->
+<div class="modal fade" id="pesquisarProdutoModal" tabindex="-1" role="dialog"
+    aria-labelledby="pesquisarProdutoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pesquisarProdutoModalLabel">Consulta Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-    
-
-
-
-
+            <div class="modal-body">
+                <!-- Formulário de pesquisa de produtos -->
+                <form method="post" id="pesquisarProdutoForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="produtoPesquisa"><strong>Digite o Nome do Produto:</strong></label>
+                        <input type="text" class="form-control" id="produtoPesquisa" name="produto_pesquisa">
+                    </div>
+                </form>
+                <div id="resultadosPesquisa"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="container mt-4">
     <div class="row">
-
         <div class="col-md-3">
-
-            
-
             <!-- Pesquisar Produto -->
-
-
-            <div class="input-group-prepend">
-                <button type="button" class="btn btn-outline-secondary" id="menuBtn">
-                    <i class="fas fa-bars"></i>
+            <div class="input-group mb-3">
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
+                    data-bs-target="#pesquisarProdutoModal">
+                    <i class="fas fa-search"></i> <strong>Pesquisar Produto</strong>
                 </button>
             </div>
 
-            <br>
-
             <!-- Adicionar Item à Venda -->
-        <div class="col-md-12">
-            <div class="card">
+            <div class="card mb-3">
                 <div class="card-body">
                     <form method="post" id="adicionarItemForm">
                         {% csrf_token %}
                         <div class="form-group">
-                            <label for="codigo_produto_base">Código do Produto:</label>
+                            <label for="codigo_produto_base"><strong>Código do Produto:</strong></label>
                             <input type="text" class="form-control" id="codigo_produto_base" name="codigo_produto_base">
                         </div>
                         <div id="formulario_quantidade" style="display: none;">
                             <!-- Formulário para produto por quantidade -->
                             <div class="form-group">
-                                <label for="quantidade">Quantidade:</label>
+                                <label for="quantidade"><strong>Quantidade:</strong></label>
                                 <input type="text" class="form-control" id="quantidade" name="quantidade">
                             </div>
                         </div>
                         <div id="formulario_peso" style="display: none;">
                             <!-- Formulário para produto por peso -->
                             <div class="form-group">
-                                <label for="peso">Peso (em kg):</label>
+                                <label for="peso"><strong>Peso (em kg):</strong></label>
                                 <input type="text" class="form-control" id="peso" name="peso">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-success">Adicionar Item</button>
+                        <button type="submit" class="btn btn-success text-center"><strong>Adicionar
+                                Item</strong></button>
                     </form>
                 </div>
             </div>
-        </div>
-
 
             <!-- Operador e Cliente -->
-            <div class="mt-4">
-                <div class="form-group">
-                    <label for="operador">Operador:</label>
-                    {{ request.user }}
-                </div>
-                <div class="form-group">
-                    <label for="cliente">Cliente:</label>
-                    <div class="form-inline">
-                        {% if venda.cliente %}
-                        <span id="nome_cliente_label">{{ venda.cliente.nome }}</span>
-                        <br>
-                        <button id="trocarClienteBtn" class="btn btn-secondary">Trocar Cliente</button>
-                        {% else %}
-                        <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
-                        <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
-                        <br>
-                        <button id="verificarClienteBtn" class="btn btn-primary">Verificar</button>
-                        {% endif %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="operador"><strong>Operador:</strong></label>
+                        <strong>{{ request.user }}</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente"><strong>Cliente:</strong></label>
+                        <div class="form-inline">
+                            {% if venda.cliente %}
+                            <span id="nome_cliente_label"><strong>{{ venda.cliente.nome }}</strong></span>
+                            <button id="trocarClienteBtn" class="btn btn-secondary ms-2"><strong>Trocar
+                                    Cliente</strong></button>
+                            {% else %}
+                            <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
+                            <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
+                            <button id="verificarClienteBtn" class="btn btn-primary"><strong>Verificar</strong></button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-
-
 
             <!-- Modal para cadastrar cliente -->
             <div class="modal fade" id="modal_cadastro_cliente" tabindex="-1" role="dialog"
@@ -123,55 +101,51 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Cadastrar Cliente</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
                         </div>
-
-
                         <div class="modal-body">
                             <form id="form_cadastro_cliente">
                                 <!-- Inclua o token CSRF -->
                                 {% csrf_token %}
                                 <!-- Campos do formulário de cadastro -->
                                 <div class="form-group">
-                                    <label for="nome_cliente_cadastro">Nome:</label>
+                                    <label for="nome_cliente_cadastro"><strong>Nome:</strong></label>
                                     <input type="text" class="form-control" id="nome_cliente_cadastro"
                                         placeholder="Nome">
                                 </div>
                                 <div class="form-group">
-                                    <label for="email_cliente_cadastro">Email:</label>
+                                    <label for="email_cliente_cadastro"><strong>Email:</strong></label>
                                     <input type="email" class="form-control" id="email_cliente_cadastro"
                                         placeholder="Email">
                                 </div>
                                 <div class="form-group">
-                                    <label for="telefone_cliente_cadastro">Telefone:</label>
+                                    <label for="telefone_cliente_cadastro"><strong>Telefone:</strong></label>
                                     <input type="text" class="form-control" id="telefone_cliente_cadastro"
                                         placeholder="Telefone">
                                 </div>
                                 <div class="form-group">
-                                    <label for="cpf_cliente_cadastro">CPF:</label>
+                                    <label for="cpf_cliente_cadastro"><strong>CPF:</strong></label>
                                     <input type="text" class="form-control" id="cpf_cliente_cadastro" placeholder="CPF">
                                 </div>
-                                <button type="submit" class="btn btn-primary">Cadastrar</button>
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                                <button type="submit" class="btn btn-primary"><strong>Cadastrar</strong></button>
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal"><strong>Fechar</strong></button>
                             </form>
                         </div>
-
                     </div>
                 </div>
             </div>
-            <!-- Fim do modal de cadastro de cliente -->
         </div>
 
         <!-- Itens da Venda -->
         <div class="col-md-9">
-
             <!-- Itens da Venda -->
-            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
-                <h2 class="mb-3">Itens da Venda</h2>
+            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded"
+                style="max-height: 400px; overflow-y: auto;">
+                <h2 class="mb-3 text-center">Itens da Venda</h2>
                 <div class="table-responsive">
-                    <table class="table table-striped" style="width: 100%;">
+                    <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th scope="col">Produto</th>
@@ -181,7 +155,7 @@
                                 <th scope="col">Ação</th>
                             </tr>
                         </thead>
-                        <tbody style="line-height: 1;">
+                        <tbody>
                             {% for item in itens_venda %}
                             <tr>
                                 <td>{{ item.produto.nome }}</td>
@@ -194,65 +168,48 @@
                                 </td>
                                 <td>R$ {{ item.preco_unitario }}</td>
                                 <td>R$ {{ item.subtotal }}</td>
-                                <td><a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm">Remover</a></td>
+                                <td><a href="{% url 'pdvweb:remover_item' item.id %}"
+                                        class="btn btn-danger btn-sm"><strong>Remover</strong></a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-
-
-
         </div>
-    </div>
-
-    <!-- BOTA TOTAL-->
-    <!-- Valor total da venda -->
-    <div class="text-right col-md-12 mb-1">
-        <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$
-            <span id="valor_total_venda">{{ valor_total_venda }}</span>
-        </strong>
     </div>
 
     <!-- Footer PDV -->
-
-    <div class="fixed-bottom mb-4"> <!-- Posiciona os botões na parte inferior da tela com um espaço de margem -->
-        <div class="container"> <!-- Container para centralizar os elementos -->
-            <div class="row justify-content-center"> <!-- Centraliza os elementos na horizontal -->
-
+    <div class="fixed-bottom text-center mb-4">
+        <div class="container">
+            <div class="row justify-content-center">
                 {% if venda.id %}
-                <div class="col-md-auto"> <!-- Coluna com largura automática -->
+                <div class="col-md-auto">
                     <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Cancelar Venda</button>
+                        <button type="submit" class="btn btn-danger"><strong>Cancelar Venda</strong></button>
                     </form>
                 </div>
-
-                <div class="col-md-auto"> <!-- Coluna com largura automática -->
+                <div class="col-md-auto">
                     <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Finalizar Venda</button>
+                        <button type="submit" class="btn btn-primary"><strong>Finalizar Venda</strong></button>
                     </form>
                 </div>
                 {% endif %}
-
+                <div class="col-md-auto mt-2">
+                    <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span
+                            id="valor_total_venda">{{ valor_total_venda }}</span></strong>
+                </div>
             </div>
         </div>
     </div>
-
-</div>
-
-
-
-
-</div>
-</div>
 </div>
 
 
 <!-- CSS do Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mousetrap@1.6.5/mousetrap.min.js"></script>
 
 <!-- JavaScript do Bootstrap (opcional) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -484,6 +441,10 @@
                 }
             });
         });
+
+
+
+
 
 
 

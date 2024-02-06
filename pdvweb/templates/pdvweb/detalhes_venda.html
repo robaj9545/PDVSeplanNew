@@ -1,18 +1,51 @@
 {% extends 'pdvweb/base.html' %}
 
 {% block content %}
-  <h1>Detalhes da Venda #{{ venda.id }}</h1>
-  <p><strong>Data:</strong> {{ venda.data }}</p>
-  <p><strong>Status:</strong> {{ venda.get_status_display }}</p>
-  <p><strong>Operador Responsável:</strong> {% if venda.operador %}{{ venda.operador.nome }}{% else %}N/A{% endif %}</p>
-  <p><strong>Cliente:</strong> {% if venda.cliente %}{{ venda.cliente.nome }}{% else %}N/A{% endif %}</p>
-  <p><strong>Itens da Venda:</strong></p>
-  <ul>
-    {% for item in venda.itens_venda.all %}
-      <li>{{ item.quantidade }}x {{ item.produto.nome }} - R$ {{ item.preco_unitario }} cada</li>
-    {% endfor %}
-  </ul>
-  <p><strong>Desconto:</strong> R$ {{ venda.desconto }}</p>
-  <p><strong>Valor Total:</strong> R$ {{ venda.valor_total }}</p>
-  <!-- Adicione mais informações conforme necessário -->
+<h1>Detalhes da Venda #{{ venda.id }}</h1>
+<p><strong>Data:</strong> {{ venda.data }}</p>
+<p><strong>Status:</strong> {{ venda.get_status_display }}</p>
+<p><strong>Operador Responsável:</strong> {% if venda.operador %}{{ venda.operador.nome }}{% else %}N/A{% endif %}</p>
+<p><strong>Cliente:</strong> {% if venda.cliente %}{{ venda.cliente.nome }}{% else %}N/A{% endif %}</p>
+<p><strong>Desconto:</strong> R$ {{ venda.desconto }}</p>
+<p><strong>Valor Total:</strong> R$ {{ venda.valor_total }}</p>
+
+<div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
+  {% if itens_venda %}
+  <h4 class="mb-3 text-center">Itens da Venda</h4>
+  <div class="table-responsive">
+    <table class="table table-striped" style="width: 100%;">
+      <thead>
+        <tr>
+          <th scope="col">Produto</th>
+          <th scope="col">Quantidade/Peso</th>
+          <th scope="col">Preço Unitário</th>
+          <th scope="col">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody style="line-height: 1;">
+        {% for item in itens_venda %}
+        <tr>
+          <td>{{ item.produto.nome }}</td>
+          <td>
+            {% if item.quantidade %}
+            {{ item.quantidade }}
+            {% else %}
+            {{ item.peso_vendido }} kg
+            {% endif %}
+          </td>
+          <td>R$ {{ item.preco_unitario }}</td>
+          <td>R$ {{ item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center"><strong>
+      <h4 class="text-center">Essa venda não possui itens.</h4>
+    </strong></p>
+  {% endif %}
+</div>
+
+<!-- Adicione mais informações conforme necessário -->
 {% endblock %}
