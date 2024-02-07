@@ -223,6 +223,8 @@
         $('#menuBtn').click(function () {
             $('#produtoPesquisa').val(''); // Limpa o valor do campo de pesquisa
             $('#pesquisarProdutoModal').modal('show');
+            $('#pesquisarProdutoForm').focus();
+            
         });
 
         // Script para limpar o campo de pesquisa ao fechar o modal
@@ -239,6 +241,8 @@
         $('#produtoPesquisa').keyup(function () {
             var query = $(this).val(); // Obtém o valor atual do campo de pesquisa
             console.log('Pesquisando por:', query);
+            // Foca no campo de pesquisa ao abrir o modal
+            
 
             // Envia uma solicitação AJAX para a visualização de pesquisa de produtos
             $.ajax({
@@ -442,6 +446,19 @@
             });
         });
 
+        
+        // Registre atalhos de teclado
+        Mousetrap.bind('shift+p', function() {
+            // Simule o clique no botão de pesquisa
+            // Verifica se o modal está aberto
+            if ($('#pesquisarProdutoModal').hasClass('show')) {
+                // Se estiver aberto, fecha o modal
+                $('#pesquisarProdutoModal').modal('hide');
+            } else {
+                // Se estiver fechado, abre o modal
+                $('#pesquisarProdutoModal').modal('show');
+            }
+        });
 
 
 
