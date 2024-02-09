@@ -263,7 +263,7 @@ def detalhes_venda(request, venda_id):
     venda = get_object_or_404(Venda, pk=venda_id)
     itens_venda_por_quantidade = venda.itemvendaporquantidade_set.all()
     itens_venda_por_peso = venda.itemvendaporpeso_set.all()
-    itens_venda = list(chain(itens_venda_por_quantidade, itens_venda_por_peso))
+    itens_venda = list(itens_venda_por_quantidade) + list(itens_venda_por_peso)
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda, 'itens_venda': itens_venda})
 
 

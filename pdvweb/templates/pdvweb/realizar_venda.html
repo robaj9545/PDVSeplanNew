@@ -457,8 +457,57 @@
             } else {
                 // Se estiver fechado, abre o modal
                 $('#pesquisarProdutoModal').modal('show');
+                // Move o foco para o campo de entrada de código do produto
+                $('#produtoPesquisa').focus();
+                // Seleciona todo o texto no campo de entrada
+                $('#produtoPesquisa').select();
             }
+
+            
         });
+
+        // Atalho de teclado Shift+A para mover o foco para o campo de entrada de código do produto
+        Mousetrap.bind('shift+a', function() {
+            // Move o foco para o campo de entrada de código do produto
+            $('#codigo_produto_base').focus();
+            // Seleciona todo o texto no campo de entrada
+            $('#codigo_produto_base').select();
+        });
+
+        // Atalho de teclado Shift+C para mover o foco para o campo de entrada de nome do cliente e selecioná-lo
+        Mousetrap.bind('shift+q', function() {
+            // Move o foco para o campo de entrada de nome do cliente
+            $('#nome_cliente').focus();
+            // Seleciona todo o texto no campo de entrada
+            $('#nome_cliente').select();
+        });
+
+        // Atalho de teclado Shift+V para verificar o cliente
+        Mousetrap.bind('shift+v', function() {
+            // Simula o clique no botão de verificação do cliente
+            $('#verificarClienteBtn').click();
+        });
+
+        // Atalho de teclado Shift+T para trocar o cliente
+        Mousetrap.bind('shift+t', function() {
+            // Simula o clique no botão de troca de cliente
+            $('#trocarClienteBtn').click();
+        });
+
+
+        // Atalho de teclado Shift+F para finalizar a venda
+        Mousetrap.bind('shift+f', function() {
+            // Simula o clique no botão de finalizar venda
+            $('[action="{% url 'pdvweb:finalizar_venda' venda.id %}"]').submit();
+        });
+
+        // Atalho de teclado Shift+C para cancelar a venda
+        Mousetrap.bind('shift+c', function() {
+            // Simula o clique no botão de cancelar venda
+            $('[action="{% url 'pdvweb:cancelar_venda' venda.id %}"]').submit();
+        });
+
+
 
 
 

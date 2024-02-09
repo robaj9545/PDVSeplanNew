@@ -9,6 +9,7 @@
       <th>Data</th>
       <th>Status</th>
       <th>Operador Responsável</th>
+      <th>Cliente</th>
       <th>Valor Total</th>
       <th>Desconto</th>
       <th>Detalhes</th>
@@ -21,6 +22,7 @@
       <td>{{ venda.data }}</td>
       <td>{{ venda.get_status_display }}</td>
       <td>{% if venda.operador %}{{ venda.operador.nome }}{% else %}N/A{% endif %}</td>
+      <td>{% if venda.cliente %}{{ venda.cliente.nome }}{% else %}N/A{% endif %}</td>
       <td>R$ {{ venda.valor_total }}</td>
       <td>R$ {{ venda.desconto }}</td>
       <td><a href="{% url 'pdvweb:detalhes_venda' venda.id %}" class="btn btn-primary">Detalhes</a></td>
