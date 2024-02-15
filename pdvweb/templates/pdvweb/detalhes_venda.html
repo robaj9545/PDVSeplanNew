@@ -25,7 +25,13 @@
       <tbody style="line-height: 1;">
         {% for item in itens_venda %}
         <tr>
-          <td>{{ item.produto.nome }}</td>
+          <td>
+            {% if item.produto_por_quantidade %}
+            {{ item.produto_por_quantidade.nome }}
+            {% else %}
+            {{ item.produto_por_peso.nome }}
+            {% endif %}
+          </td>
           <td>
             {% if item.quantidade %}
             {{ item.quantidade }}

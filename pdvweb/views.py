@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
-from .models import Venda, CustomUser, Operador, Cliente, ItemVendaPorQuantidade, ItemVendaPorPeso, ProdutoPorPeso, ProdutoPorQuantidade, ProdutoPorPeso
+from .models import Venda, CustomUser, Operador, Cliente, ItemVenda, ProdutoPorPeso, ProdutoPorQuantidade, ProdutoPorPeso
 from .forms import RegistroOperadorForm, LoginOperadorForm, ClienteForm, VendaItemPorQuantidadeForm, VendaItemPorPesoForm, ProdutoPorQuantidadeForm, ProdutoPorPesoForm
 from django.db import transaction
 from itertools import chain
@@ -123,7 +123,7 @@ def verificar_tipo_produto(request):
                 # Tentar encontrar o produto pelo código
                 produto_por_quantidade = ProdutoPorQuantidade.objects.get(
                     codigo=codigo_produto)
-                return HttpResponse("produto_por_quantidade")
+                return JsonResponse({'tipo_produto': 'produto_por_quantidade', 'nome_produto': produto_por_quantidade.nome})
 
             except ProdutoPorQuantidade.DoesNotExist:
                 pass
@@ -132,12 +132,12 @@ def verificar_tipo_produto(request):
                 # Tentar encontrar o produto pelo código
                 produto_por_peso = ProdutoPorPeso.objects.get(
                     codigo=codigo_produto)
-                return HttpResponse("produto_por_peso")
+                return JsonResponse({'tipo_produto': 'produto_por_peso', 'nome_produto': produto_por_peso.nome})
 
             except ProdutoPorPeso.DoesNotExist:
                 pass
 
-    return HttpResponse("produto_nao_encontrado")
+    return JsonResponse({'tipo_produto': 'produto_nao_encontrado'})
 
 
 @login_required
@@ -157,11 +157,10 @@ def realizar_venda(request):
                 produto = get_object_or_404(
                     ProdutoPorQuantidade, codigo=codigo_produto_base)
                 with transaction.atomic():
-                    venda_item = venda.itemvendaporquantidade_set.create(
-                        produto=produto, quantidade=quantidade, preco_unitario=produto.preco)
+                    venda_item = ItemVenda.objects.create(
+                        venda=venda, produto_por_quantidade=produto, quantidade=quantidade, preco_unitario=produto.preco)
                     produto.remover_estoque(quantidade)
                     venda.calcular_valor_total()
-                # Retorna o valor total da venda via JSON
                 return JsonResponse({'valor_total_venda': venda.valor_total})
         elif 'peso' in request.POST:
             form = VendaItemPorPesoForm(request.POST)
@@ -171,21 +170,17 @@ def realizar_venda(request):
                 produto = get_object_or_404(
                     ProdutoPorPeso, codigo=codigo_produto_base)
                 with transaction.atomic():
-                    venda_item = venda.itemvendaporpeso_set.create(
-                        produto=produto, peso_vendido=peso, preco_unitario=produto.preco_por_kilo)
+                    venda_item = ItemVenda.objects.create(
+                        venda=venda, produto_por_peso=produto, peso_vendido=peso, preco_unitario=produto.preco_por_kilo)
                     produto.remover_estoque_em_kilos(peso)
                     venda.calcular_valor_total()
-                # Retorna o valor total da venda via JSON
                 return JsonResponse({'valor_total_venda': venda.valor_total})
 
-    itens_venda_por_quantidade = venda.itemvendaporquantidade_set.all()
-    itens_venda_por_peso = venda.itemvendaporpeso_set.all()
-    itens_venda = list(chain(itens_venda_por_quantidade, itens_venda_por_peso))
+    itens_venda = venda.itemvenda_set.all()
 
     context = {
         'venda': venda,
         'itens_venda': itens_venda,
-        # Passando o valor total da venda para o contexto
         'valor_total_venda': venda.valor_total,
     }
 
@@ -197,27 +192,19 @@ def realizar_venda(request):
 
 @login_required
 def remover_item(request, item_id):
-    try:
-        item_venda_por_quantidade = ItemVendaPorQuantidade.objects.get(
-            id=item_id)
-        produto = item_venda_por_quantidade.produto
-        quantidade = item_venda_por_quantidade.quantidade
+    item_venda = get_object_or_404(ItemVenda, id=item_id)
+
+    if item_venda.produto_por_quantidade:
+        produto = item_venda.produto_por_quantidade
+        quantidade = item_venda.quantidade
         produto.adicionar_estoque(quantidade)
-        item_venda_por_quantidade.delete()
-    except ItemVendaPorQuantidade.DoesNotExist:
-        pass
-
-    try:
-        item_venda_por_peso = ItemVendaPorPeso.objects.get(id=item_id)
-        produto = item_venda_por_peso.produto
-        peso_vendido = item_venda_por_peso.peso_vendido
+    elif item_venda.produto_por_peso:
+        produto = item_venda.produto_por_peso
+        peso_vendido = item_venda.peso_vendido
         produto.adicionar_estoque_em_kilos(peso_vendido)
-        item_venda_por_peso.delete()
-    except ItemVendaPorPeso.DoesNotExist:
-        pass
 
-    venda = item_venda_por_quantidade.venda if 'item_venda_por_quantidade' in locals(
-    ) else item_venda_por_peso.venda
+    item_venda.delete()
+    venda = item_venda.venda
     venda.calcular_valor_total()
 
     return redirect(reverse('pdvweb:realizar_venda'))
@@ -225,18 +212,14 @@ def remover_item(request, item_id):
 
 @login_required
 def finalizar_venda(request, venda_id):
-    venda = get_object_or_404(
-        Venda, id=venda_id)
-
+    venda = get_object_or_404(Venda, id=venda_id)
     venda.finalizar_venda()
-
     return redirect(reverse('pdvweb:realizar_venda'))
 
 
 @login_required
 def cancelar_venda(request, venda_id):
-    venda = get_object_or_404(
-        Venda, id=venda_id)
+    venda = get_object_or_404(Venda, id=venda_id)
     venda.cancelar_venda()
     return redirect(reverse('pdvweb:realizar_venda'))
 
@@ -255,15 +238,12 @@ def aplicar_desconto(request, venda_id):
 @login_required
 def historico_vendas(request):
     vendas = Venda.objects.all()
-
     return render(request, 'pdvweb/historico_vendas.html', {'vendas': vendas})
 
 
 def detalhes_venda(request, venda_id):
     venda = get_object_or_404(Venda, pk=venda_id)
-    itens_venda_por_quantidade = venda.itemvendaporquantidade_set.all()
-    itens_venda_por_peso = venda.itemvendaporpeso_set.all()
-    itens_venda = list(itens_venda_por_quantidade) + list(itens_venda_por_peso)
+    itens_venda = venda.itemvenda_set.all()
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda, 'itens_venda': itens_venda})
 
 

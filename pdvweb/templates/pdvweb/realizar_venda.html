@@ -37,7 +37,7 @@
             <div class="input-group mb-3">
                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
                     data-bs-target="#pesquisarProdutoModal">
-                    <i class="fas fa-search"></i> <strong>Pesquisar Produto</strong>
+                    <i class="fas fa-search"></i> <strong>Pesquisar Produto/SHIFT+P</strong>
                 </button>
             </div>
 
@@ -47,9 +47,12 @@
                     <form method="post" id="adicionarItemForm">
                         {% csrf_token %}
                         <div class="form-group">
-                            <label for="codigo_produto_base"><strong>Código do Produto:</strong></label>
-                            <input type="text" class="form-control" id="codigo_produto_base" name="codigo_produto_base">
+                            <label for="codigo_produto_base"><strong>Código do Produto:/SHIFT+A</strong></label>
+                            <input type="text" class="form-control" id="codigo_produto_base"
+                                name="codigo_produto_base"><strong id="nome_produto"></strong>
+
                         </div>
+
                         <div id="formulario_quantidade" style="display: none;">
                             <!-- Formulário para produto por quantidade -->
                             <div class="form-group">
@@ -65,7 +68,7 @@
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success text-center"><strong>Adicionar
-                                Item</strong></button>
+                                Item/ENTER</strong></button>
                     </form>
                 </div>
             </div>
@@ -78,16 +81,17 @@
                         <strong>{{ request.user }}</strong>
                     </div>
                     <div class="form-group">
-                        <label for="cliente"><strong>Cliente:</strong></label>
+                        <label for="cliente"><strong>Cliente:/SHIFT+Q</strong></label>
                         <div class="form-inline">
                             {% if venda.cliente %}
                             <span id="nome_cliente_label"><strong>{{ venda.cliente.nome }}</strong></span>
                             <button id="trocarClienteBtn" class="btn btn-secondary ms-2"><strong>Trocar
-                                    Cliente</strong></button>
+                                    Cliente/SHIFT+T</strong></button>
                             {% else %}
                             <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
                             <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
-                            <button id="verificarClienteBtn" class="btn btn-primary"><strong>Verificar</strong></button>
+                            <button id="verificarClienteBtn"
+                                class="btn btn-primary"><strong>Verificar/SHIFT+V</strong></button>
                             {% endif %}
                         </div>
                     </div>
@@ -158,7 +162,13 @@
                         <tbody>
                             {% for item in itens_venda %}
                             <tr>
-                                <td>{{ item.produto.nome }}</td>
+                                <td>
+                                    {% if item.produto_por_quantidade %}
+                                    {{ item.produto_por_quantidade.nome }}
+                                    {% else %}
+                                    {{ item.produto_por_peso.nome }}
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {% if item.quantidade %}
                                     {{ item.quantidade }}
@@ -168,7 +178,7 @@
                                 </td>
                                 <td>R$ {{ item.preco_unitario }}</td>
                                 <td>R$ {{ item.subtotal }}</td>
-                                <td><a href="{% url 'pdvweb:remover_item' item.id %}"
+                                <td id="remove"><a href="{% url 'pdvweb:remover_item' item.id %}"
                                         class="btn btn-danger btn-sm"><strong>Remover</strong></a></td>
                             </tr>
                             {% endfor %}
@@ -187,13 +197,13 @@
                 <div class="col-md-auto">
                     <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger"><strong>Cancelar Venda</strong></button>
+                        <button type="submit" class="btn btn-danger"><strong>Cancelar Venda/SHIFT+C</strong></button>
                     </form>
                 </div>
                 <div class="col-md-auto">
                     <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary"><strong>Finalizar Venda</strong></button>
+                        <button type="submit" class="btn btn-primary"><strong>Finalizar Venda/SHIFT+F</strong></button>
                     </form>
                 </div>
                 {% endif %}
@@ -205,6 +215,8 @@
         </div>
     </div>
 </div>
+
+
 
 
 <!-- CSS do Bootstrap -->
@@ -224,7 +236,7 @@
             $('#produtoPesquisa').val(''); // Limpa o valor do campo de pesquisa
             $('#pesquisarProdutoModal').modal('show');
             $('#pesquisarProdutoForm').focus();
-            
+
         });
 
         // Script para limpar o campo de pesquisa ao fechar o modal
@@ -242,7 +254,7 @@
             var query = $(this).val(); // Obtém o valor atual do campo de pesquisa
             console.log('Pesquisando por:', query);
             // Foca no campo de pesquisa ao abrir o modal
-            
+
 
             // Envia uma solicitação AJAX para a visualização de pesquisa de produtos
             $.ajax({
@@ -279,12 +291,16 @@
                     },
                     success: function (data) {
                         // Mostra o formulário relevante com base no tipo de produto identificado
-                        if (data === 'produto_por_quantidade') {
+                        if (data.tipo_produto === 'produto_por_quantidade') {
                             $('#formulario_quantidade').show();
                             $('#formulario_peso').hide();
-                        } else if (data === 'produto_por_peso') {
+                            // Troca o valor do elemento com id 'nome_produto' pelo nome do produto
+                            $('#nome_produto').text(data.nome_produto);
+                        } else if (data.tipo_produto === 'produto_por_peso') {
                             $('#formulario_quantidade').hide();
                             $('#formulario_peso').show();
+                            // Troca o valor do elemento com id 'nome_produto' pelo nome do produto
+                            $('#nome_produto').text(data.nome_produto);
                         }
                     },
                     error: function (error) {
@@ -293,6 +309,8 @@
                 });
             }
         });
+
+
 
         // Script para adicionar item à venda
         $('#adicionarItemForm').submit(function (e) {
@@ -446,76 +464,125 @@
             });
         });
 
-        
-        // Registre atalhos de teclado
-        Mousetrap.bind('shift+p', function() {
-            // Simule o clique no botão de pesquisa
-            // Verifica se o modal está aberto
+        // Escute o evento de teclado no documento inteiro
+        $(document).on('keydown', function (event) {
+            // Verifique se a tecla Shift está pressionada
+            if (event.shiftKey) {
+                // Verifique qual tecla foi pressionada e execute a ação correspondente
+                switch (event.key) {
+                    case 'P':
+                        togglePesquisarProdutoModal();
+                        break;
+                    case 'A':
+                        focusInput('#codigo_produto_base');
+                        break;
+                    case 'Q':
+                        focusInput('#nome_cliente');
+                        break;
+                    case 'V':
+                        clickButton('#verificarClienteBtn');
+                        break;
+                    case 'T':
+                        clickButton('#trocarClienteBtn');
+                        break;
+                    case 'F':
+                        submitForm('[action="{% url "pdvweb:finalizar_venda" venda.id %}"]');
+                        break;
+                    case 'C':
+                        submitForm('[action="{% url "pdvweb:cancelar_venda" venda.id %}"]');
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
+
+        // Variável para rastrear o índice do item atualmente selecionado
+        var selectedItemIndex = -1;
+
+        // Capturar eventos de teclado
+        $(document).keydown(function (event) {
+            // Verificar se as teclas Shift + I foram pressionadas
+            if (event.shiftKey && event.key === 'R') {
+                // Iterar sobre os itens da venda
+                $('#itens-da-venda tbody tr').each(function (index) {
+                    $(this).removeClass('selected');
+                    if (index === selectedItemIndex) {
+                        $(this).addClass('selected');
+                    }
+                });
+            }
+            // Verificar se as teclas de seta para cima ou para baixo foram pressionadas
+            else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                // Atualizar o índice do item selecionado
+                if (event.key === 'ArrowUp' && selectedItemIndex > 0) {
+                    selectedItemIndex--;
+                } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1) {
+                    selectedItemIndex++;
+                }
+
+                // Remover a classe 'selected' de todas as linhas da tabela
+                $('#itens-da-venda tbody tr').removeClass('selected');
+                // Adicionar a classe 'selected' à linha do item selecionado
+                $('#itens-da-venda tbody tr').eq(selectedItemIndex).addClass('selected');
+                console.log("setas funcionando");
+            }
+            // Verificar se a tecla Enter foi pressionada para remover o item selecionado
+            else if (event.which === 13) {
+                console.log("enter funcionando");
+                if (selectedItemIndex >= 0) {
+                    var selectedRow = $('#itens-da-venda tbody tr').eq(selectedItemIndex);
+                    selectedRow.click('#remove'); // Seleciona o botão "Remover"
+
+                    // Simular o clique no botão "Remover"
+
+                }
+            }
+        });
+
+        //PEGAR O ID DO ITEM POR MEIO DA URL <a href="/pdvweb/remover_item/14/" class="btn btn-danger btn-sm"><strong>Remover</strong></a>
+
+        // Função para abrir ou fechar o modal de pesquisa de produto
+        function togglePesquisarProdutoModal() {
             if ($('#pesquisarProdutoModal').hasClass('show')) {
-                // Se estiver aberto, fecha o modal
                 $('#pesquisarProdutoModal').modal('hide');
             } else {
-                // Se estiver fechado, abre o modal
                 $('#pesquisarProdutoModal').modal('show');
-                // Move o foco para o campo de entrada de código do produto
-                $('#produtoPesquisa').focus();
-                // Seleciona todo o texto no campo de entrada
-                $('#produtoPesquisa').select();
+                $('#produtoPesquisa').focus().select();
             }
+        }
 
-            
-        });
+        // Função para mover o foco para um elemento de entrada e selecionar seu conteúdo
+        function focusInput(selector) {
+            $(selector).focus().select();
+        }
 
-        // Atalho de teclado Shift+A para mover o foco para o campo de entrada de código do produto
-        Mousetrap.bind('shift+a', function() {
-            // Move o foco para o campo de entrada de código do produto
-            $('#codigo_produto_base').focus();
-            // Seleciona todo o texto no campo de entrada
-            $('#codigo_produto_base').select();
-        });
+        // Função para simular o clique em um botão
+        function clickButton(selector) {
+            $(selector).click();
+        }
 
-        // Atalho de teclado Shift+C para mover o foco para o campo de entrada de nome do cliente e selecioná-lo
-        Mousetrap.bind('shift+q', function() {
-            // Move o foco para o campo de entrada de nome do cliente
-            $('#nome_cliente').focus();
-            // Seleciona todo o texto no campo de entrada
-            $('#nome_cliente').select();
-        });
-
-        // Atalho de teclado Shift+V para verificar o cliente
-        Mousetrap.bind('shift+v', function() {
-            // Simula o clique no botão de verificação do cliente
-            $('#verificarClienteBtn').click();
-        });
-
-        // Atalho de teclado Shift+T para trocar o cliente
-        Mousetrap.bind('shift+t', function() {
-            // Simula o clique no botão de troca de cliente
-            $('#trocarClienteBtn').click();
-        });
-
-
-        // Atalho de teclado Shift+F para finalizar a venda
-        Mousetrap.bind('shift+f', function() {
-            // Simula o clique no botão de finalizar venda
-            $('[action="{% url 'pdvweb:finalizar_venda' venda.id %}"]').submit();
-        });
-
-        // Atalho de teclado Shift+C para cancelar a venda
-        Mousetrap.bind('shift+c', function() {
-            // Simula o clique no botão de cancelar venda
-            $('[action="{% url 'pdvweb:cancelar_venda' venda.id %}"]').submit();
-        });
-
-
-
-
+        // Função para enviar um formulário
+        function submitForm(selector) {
+            $(selector).submit();
+        }
 
 
 
 
     });
 </script>
+
+<!-- Estilos Bootstrap para o item selecionado -->
+<style>
+    .selected {
+        background-color: #007bff;
+        /* Cor de fundo azul Bootstrap */
+        color: #fff;
+        /* Cor do texto branco */
+    }
+</style>
 
 
 {% endblock %}

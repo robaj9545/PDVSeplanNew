@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .models import Categoria, Cliente, Operador, CustomUser, CustomGroup, ProdutoPorQuantidade, ProdutoPorPeso, Venda, ItemVendaPorQuantidade, ItemVendaPorPeso
+from .models import Categoria, Cliente, Operador, CustomUser, CustomGroup, ProdutoPorQuantidade, ProdutoPorPeso, Venda, ItemVenda
 from .forms import VendaForm
 
 
@@ -44,33 +44,15 @@ class ProdutoPorPesoAdmin(admin.ModelAdmin):
     list_filter = ['categoria']
 
 
-class ItemVendaPorQuantidadeInline(admin.TabularInline):
-    model = ItemVendaPorQuantidade
-
-
-class ItemVendaPorPesoInline(admin.TabularInline):
-    model = ItemVendaPorPeso
+class ItemVendaInline(admin.TabularInline):
+    model = ItemVenda
 
 
 class VendaAdmin(admin.ModelAdmin):
     list_display = ['id', 'data', 'status', 'valor_total', 'desconto']
     search_fields = ['id', 'status']
     list_filter = ['status']
-    inlines = [ItemVendaPorQuantidadeInline, ItemVendaPorPesoInline]
-
-    form = VendaForm
-
-
-class ItemVendaPorQuantidadeAdmin(admin.ModelAdmin):
-    list_display = ['produto', 'quantidade', 'preco_unitario', 'subtotal']
-    search_fields = ['produto__nome']
-    list_filter = ['produto']
-
-
-class ItemVendaPorPesoAdmin(admin.ModelAdmin):
-    list_display = ['produto', 'peso_vendido', 'preco_unitario', 'subtotal']
-    search_fields = ['produto__nome']
-    list_filter = ['produto']
+    inlines = [ItemVendaInline]
 
 
 admin.site.register(Categoria, CategoriaAdmin)
@@ -81,5 +63,3 @@ admin.site.register(CustomGroup, CustomGroupAdmin)
 admin.site.register(ProdutoPorQuantidade, ProdutoPorQuantidadeAdmin)
 admin.site.register(ProdutoPorPeso, ProdutoPorPesoAdmin)
 admin.site.register(Venda, VendaAdmin)
-admin.site.register(ItemVendaPorQuantidade, ItemVendaPorQuantidadeAdmin)
-admin.site.register(ItemVendaPorPeso, ItemVendaPorPesoAdmin)

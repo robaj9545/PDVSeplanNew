@@ -206,14 +206,16 @@ class Venda(models.Model):
         return f'Venda {self.id} - {self.data} ({self.get_status_display()})'
 
     def calcular_valor_total(self):
-        subtotal_unidades = self.itemvendaporquantidade_set.aggregate(
-            total=Sum(F('quantidade') * F('preco_unitario'),
-                      output_field=models.DecimalField())
+        subtotal_unidades = self.itemvenda_set.filter(
+            produto_por_quantidade__isnull=False
+        ).aggregate(
+            total=Sum('subtotal')
         ).get('total') or Decimal('0.0')
 
-        subtotal_peso = self.itemvendaporpeso_set.aggregate(
-            total=Sum(F('peso_vendido') * F('preco_unitario'),
-                      output_field=models.DecimalField())
+        subtotal_peso = self.itemvenda_set.filter(
+            produto_por_peso__isnull=False
+        ).aggregate(
+            total=Sum('subtotal')
         ).get('total') or Decimal('0.0')
 
         total_sem_desconto = subtotal_unidades + subtotal_peso
@@ -226,21 +228,29 @@ class Venda(models.Model):
 
     def finalizar_venda(self):
         with transaction.atomic():
-            for item in self.itemvendaporquantidade_set.all():
-                item.produto.remover_estoque(item.quantidade)
-            for item_peso in self.itemvendaporpeso_set.all():
-                item_peso.produto.remover_estoque_em_kilos(
-                    item_peso.peso_vendido)
+            for item in self.itemvenda_set.all():
+                if item.produto_por_quantidade:
+                    # Ajuste para acessar o produto através do relacionamento com ProdutoBase
+                    item.produto_por_quantidade.adicionar_estoque(
+                        item.quantidade)
+                elif item.produto_por_peso:
+                    # Ajuste para acessar o produto através do relacionamento com ProdutoBase
+                    item.produto_por_peso.adicionar_estoque_em_kilos(
+                        item.peso_vendido)
             self.status = self.STATUS_CONCLUIDA
             self.save()
 
     def cancelar_venda(self):
         with transaction.atomic():
-            for item in self.itemvendaporquantidade_set.all():
-                item.produto.adicionar_estoque(item.quantidade)
-            for item_peso in self.itemvendaporpeso_set.all():
-                item_peso.produto.adicionar_estoque_em_kilos(
-                    item_peso.peso_vendido)
+            for item in self.itemvenda_set.all():
+                if item.produto_por_quantidade:
+                    # Ajuste para acessar o produto através do relacionamento com ProdutoBase
+                    item.produto_por_quantidade.adicionar_estoque(
+                        item.quantidade)
+                elif item.produto_por_peso:
+                    # Ajuste para acessar o produto através do relacionamento com ProdutoBase
+                    item.produto_por_peso.adicionar_estoque_em_kilos(
+                        item.peso_vendido)
             self.status = self.STATUS_CANCELADA
             self.save()
 
@@ -249,46 +259,29 @@ class Venda(models.Model):
             raise ValueError("Status inválido.")
 
 
-class ItemVendaBase(models.Model):
+class ItemVenda(models.Model):
     venda = models.ForeignKey(Venda, on_delete=models.CASCADE)
     preco_unitario = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.0)
     subtotal = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.0)
+    produto_por_quantidade = models.ForeignKey(
+        ProdutoPorQuantidade, on_delete=models.CASCADE, null=True, blank=True)
+    produto_por_peso = models.ForeignKey(
+        ProdutoPorPeso, on_delete=models.CASCADE, null=True, blank=True)
+    quantidade = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)], null=True, blank=True)
+    peso_vendido = models.DecimalField(
+        max_digits=10, decimal_places=3, default=0.0, null=True, blank=True)
 
-    class Meta:
-        abstract = True
+    def save(self, *args, **kwargs):
+        if self.produto_por_quantidade:
+            self.preco_unitario = self.produto_por_quantidade.preco
+            self.subtotal = self.quantidade * self.preco_unitario
+        elif self.produto_por_peso:
+            self.preco_unitario = self.produto_por_peso.preco_por_kilo
+            self.subtotal = self.peso_vendido * self.preco_unitario
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Subtotal: {self.subtotal}'
-
-
-class ItemVendaPorQuantidade(ItemVendaBase):
-    produto = models.ForeignKey(ProdutoPorQuantidade, on_delete=models.CASCADE)
-    quantidade = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-
-    def save(self, *args, **kwargs):
-        if not self.preco_unitario:
-            self.preco_unitario = self.produto.preco
-        self.subtotal = self.quantidade * self.preco_unitario
-        super().save(*args, **kwargs)
-
-    def clean(self):
-        if self.quantidade <= 0:
-            raise QuantidadeInvalidaError()
-
-
-class ItemVendaPorPeso(ItemVendaBase):
-    produto = models.ForeignKey(ProdutoPorPeso, on_delete=models.CASCADE)
-    peso_vendido = models.DecimalField(
-        max_digits=10, decimal_places=3, default=0.0)
-
-    def save(self, *args, **kwargs):
-        if not self.preco_unitario:
-            self.preco_unitario = self.produto.preco_por_kilo
-        self.subtotal = self.peso_vendido * self.preco_unitario
-        super().save(*args, **kwargs)
-
-    def clean(self):
-        if self.peso_vendido <= 0:
-            raise PesoVendidoInvalidoError()
