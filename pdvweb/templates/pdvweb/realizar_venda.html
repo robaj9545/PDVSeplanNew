@@ -149,7 +149,7 @@
                 style="max-height: 400px; overflow-y: auto;">
                 <h2 class="mb-3 text-center">Itens da Venda</h2>
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th scope="col">Produto</th>
@@ -464,8 +464,23 @@
             });
         });
 
+        // Função para abrir ou fechar o modal de pesquisa de produto
+        function togglePesquisarProdutoModal() {
+            if ($('#pesquisarProdutoModal').hasClass('show')) {
+                $('#pesquisarProdutoModal').modal('hide');
+            } else {
+                $('#pesquisarProdutoModal').modal('show');
+                $('#produtoPesquisa').focus().select();
+            }
+        }
+        
+        
         // Escute o evento de teclado no documento inteiro
-        $(document).on('keydown', function (event) {
+        var shiftRPressed = false;
+        var selectedItemIndex = -1;
+    
+        // Escute o evento de teclado no documento inteiro
+        $(document).on('keydown', function(event) {
             // Verifique se a tecla Shift está pressionada
             if (event.shiftKey) {
                 // Verifique qual tecla foi pressionada e execute a ação correspondente
@@ -491,85 +506,91 @@
                     case 'C':
                         submitForm('[action="{% url "pdvweb:cancelar_venda" venda.id %}"]');
                         break;
+                    case 'R':
+                        // Ativar a funcionalidade de selecionar e remover os itens
+                        shiftRPressed = true;
+                        break;
                     default:
                         break;
                 }
             }
         });
-
-
-        // Variável para rastrear o índice do item atualmente selecionado
-        var selectedItemIndex = -1;
-
-        // Capturar eventos de teclado
-        $(document).keydown(function (event) {
-            // Verificar se as teclas Shift + I foram pressionadas
-            if (event.shiftKey && event.key === 'R') {
-                // Iterar sobre os itens da venda
-                $('#itens-da-venda tbody tr').each(function (index) {
-                    $(this).removeClass('selected');
-                    if (index === selectedItemIndex) {
-                        $(this).addClass('selected');
-                    }
-                });
-            }
-            // Verificar se as teclas de seta para cima ou para baixo foram pressionadas
-            else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-                // Atualizar o índice do item selecionado
-                if (event.key === 'ArrowUp' && selectedItemIndex > 0) {
-                    selectedItemIndex--;
-                } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1) {
-                    selectedItemIndex++;
-                }
-
+    
+        // Escute o evento de soltar a tecla
+        $(document).on('keyup', function(event) {
+            // Verifique se a tecla Shift foi solta
+            if (!event.shiftKey && shiftRPressed) {
+                // Desativar a funcionalidade de selecionar e remover os itens
+                shiftRPressed = false;
                 // Remover a classe 'selected' de todas as linhas da tabela
                 $('#itens-da-venda tbody tr').removeClass('selected');
                 // Adicionar a classe 'selected' à linha do item selecionado
-                $('#itens-da-venda tbody tr').eq(selectedItemIndex).addClass('selected');
-                console.log("setas funcionando");
+                $('#itens-da-venda tbody tr').eq(selectedItemIndex).removeClass('selected');
             }
-            // Verificar se a tecla Enter foi pressionada para remover o item selecionado
-            else if (event.which === 13) {
-                console.log("enter funcionando");
-                if (selectedItemIndex >= 0) {
-                    var selectedRow = $('#itens-da-venda tbody tr').eq(selectedItemIndex);
-                    selectedRow.click('#remove'); // Seleciona o botão "Remover"
-
-                    // Simular o clique no botão "Remover"
-
+        });
+    
+        // Escute o evento de pressionar uma tecla enquanto a tecla Shift está pressionada
+        $(document).on('keydown', function(event) {
+            // Verificar se a tecla Shift + R foi pressionada
+            if (shiftRPressed) {
+                // Verificar se as teclas de seta para cima ou para baixo foram pressionadas
+                if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                    // Atualizar o índice do item selecionado
+                    if (event.key === 'ArrowUp' && selectedItemIndex > 0) {
+                        selectedItemIndex--;
+                    } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1) {
+                        selectedItemIndex++;
+                    }
+    
+                    // Remover a classe 'selected' de todas as linhas da tabela
+                    $('#itens-da-venda tbody tr').removeClass('selected');
+                    // Adicionar a classe 'selected' à linha do item selecionado
+                    $('#itens-da-venda tbody tr').eq(selectedItemIndex).addClass('selected');
+                }
+                // Verificar se a tecla Enter foi pressionada para remover o item selecionado
+                else if (event.which === 13) {
+                    if (selectedItemIndex >= 0) {
+                        var selectedRow = $('#itens-da-venda tbody tr').eq(selectedItemIndex);
+                        var removeButton = selectedRow.find('#remove a'); // Seleciona o botão "Remover"
+                        var removeUrl = removeButton.attr('href'); // Obtém a URL de remoção do item
+    
+                        // Envie uma solicitação AJAX para remover o item da venda
+                        $.ajax({
+                            type: 'GET',
+                            url: removeUrl,
+                            success: function(data) {
+                                // Atualize a seção do HTML que exibe o valor total da venda, se necessário
+                                $('#valor_total_venda').text(data.valor_total_venda);
+                                // Remova a linha da tabela de itens da venda
+                                selectedRow.remove();
+                                // Redefina o índice do item selecionado
+                                selectedItemIndex = -1;
+                                // Remover a classe 'selected' de todas as linhas da tabela
+                                $('#itens-da-venda tbody tr').removeClass('selected');
+                            },
+                            error: function(error) {
+                                console.log('Erro ao remover o item da venda:', error);
+                            }
+                        });
+                    }
                 }
             }
         });
-
-        //PEGAR O ID DO ITEM POR MEIO DA URL <a href="/pdvweb/remover_item/14/" class="btn btn-danger btn-sm"><strong>Remover</strong></a>
-
-        // Função para abrir ou fechar o modal de pesquisa de produto
-        function togglePesquisarProdutoModal() {
-            if ($('#pesquisarProdutoModal').hasClass('show')) {
-                $('#pesquisarProdutoModal').modal('hide');
-            } else {
-                $('#pesquisarProdutoModal').modal('show');
-                $('#produtoPesquisa').focus().select();
-            }
-        }
-
+    
         // Função para mover o foco para um elemento de entrada e selecionar seu conteúdo
         function focusInput(selector) {
             $(selector).focus().select();
         }
-
+    
         // Função para simular o clique em um botão
         function clickButton(selector) {
             $(selector).click();
         }
-
+    
         // Função para enviar um formulário
         function submitForm(selector) {
             $(selector).submit();
         }
-
-
-
 
     });
 </script>

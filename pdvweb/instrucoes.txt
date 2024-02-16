@@ -32,3 +32,88 @@ git pull
 git push -u origin main
 ENVIAR DA MAQUINA LOCAL PARA O REPOSITORIO REMOTO DO GIT
 git push --force origin main
+
+
+
+
+SCRIPT DE REMOVER ITENS DA VENDA PELO TECLADO
+// Variável para rastrear o índice do item atualmente selecionado
+var selectedItemIndex = -1;
+
+// Capturar eventos de teclado
+$(document).keydown(function (event) {
+    // Verificar se as teclas Shift + R foram pressionadas
+    if (event.shiftKey && event.key === 'R') {
+        // Iterar sobre os itens da venda
+        $('#itens-da-venda tbody tr').each(function (index) {
+            $(this).removeClass('selected');
+            if (index === selectedItemIndex) {
+                $(this).addClass('selected');
+            }
+        });
+    }
+    // Verificar se as teclas de seta para cima ou para baixo foram pressionadas
+    else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        // Atualizar o índice do item selecionado
+        if (event.key === 'ArrowUp' && selectedItemIndex > 0) {
+            selectedItemIndex--;
+        } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1) {
+            selectedItemIndex++;
+        }
+
+        // Remover a classe 'selected' de todas as linhas da tabela
+        $('#itens-da-venda tbody tr').removeClass('selected');
+        // Adicionar a classe 'selected' à linha do item selecionado
+        $('#itens-da-venda tbody tr').eq(selectedItemIndex).addClass('selected');
+    }
+    // Verificar se a tecla Enter foi pressionada para remover o item selecionado
+    else if (event.which === 13) {
+        if (selectedItemIndex >= 0) {
+            var selectedRow = $('#itens-da-venda tbody tr').eq(selectedItemIndex);
+            var removeButton = selectedRow.find('#remove a'); // Seleciona o botão "Remover"
+            var removeUrl = removeButton.attr('href'); // Obtém a URL de remoção do item
+
+            // Envie uma solicitação AJAX para remover o item da venda
+            $.ajax({
+                type: 'GET',
+                url: removeUrl,
+                success: function (data) {
+                    // Atualize a seção do HTML que exibe o valor total da venda, se necessário
+                    $('#valor_total_venda').text(data.valor_total_venda);
+                    // Remova a linha da tabela de itens da venda
+                    selectedRow.remove();
+                    // Redefina o índice do item selecionado
+                    selectedItemIndex = -1;
+                },
+                error: function (error) {
+                    console.log('Erro ao remover o item da venda:', error);
+                }
+            });
+        }
+    }
+});
+
+// Função para abrir ou fechar o modal de pesquisa de produto
+function togglePesquisarProdutoModal() {
+    if ($('#pesquisarProdutoModal').hasClass('show')) {
+        $('#pesquisarProdutoModal').modal('hide');
+    } else {
+        $('#pesquisarProdutoModal').modal('show');
+        $('#produtoPesquisa').focus().select();
+    }
+}
+
+// Função para mover o foco para um elemento de entrada e selecionar seu conteúdo
+function focusInput(selector) {
+    $(selector).focus().select();
+}
+
+// Função para simular o clique em um botão
+function clickButton(selector) {
+    $(selector).click();
+}
+
+// Função para enviar um formulário
+function submitForm(selector) {
+    $(selector).submit();
+}
