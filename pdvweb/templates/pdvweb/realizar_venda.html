@@ -30,7 +30,7 @@
     </div>
 </div>
 
-<div class="container mt-4">
+<div class="container-fluid mt-6">
     <div class="row">
         <div class="col-md-3">
             <!-- Pesquisar Produto -->
@@ -43,7 +43,7 @@
 
             <!-- Adicionar Item à Venda -->
             <div class="card mb-3">
-                <div class="card-body">
+                <div class="card-body full-width-card-body d-flex justify-content-center align-items-centery">
                     <form method="post" id="adicionarItemForm">
                         {% csrf_token %}
                         <div class="form-group">
@@ -75,20 +75,20 @@
 
             <!-- Operador e Cliente -->
             <div class="card mb-3">
-                <div class="card-body">
+                <div class="card-body full-width-card-body d-flex justify-content-center align-items-centery">
                     <div class="form-group">
                         <label for="operador"><strong>Operador:</strong></label>
                         <strong>{{ request.user }}</strong>
                     </div>
-                    <div class="form-group">
+                    <br>
+                    <div class="form-group ms-3">
                         <label for="cliente"><strong>Cliente:/SHIFT+Q</strong></label>
-                        <div class="form-inline">
+                        <div class="">
                             {% if venda.cliente %}
-                            <span id="nome_cliente_label"><strong>{{ venda.cliente.nome }}</strong></span>
-                            <button id="trocarClienteBtn" class="btn btn-secondary ms-2"><strong>Trocar
-                                    Cliente/SHIFT+T</strong></button>
+                            <span id="nome_cliente_label ms-2"><strong>{{ venda.cliente.nome }}</strong></span>
+                            <button id="trocarClienteBtn" class="btn btn-secondary "><strong>Trocar/SHIFT+T</strong></button>
                             {% else %}
-                            <input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">
+                            <!--<input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">-->
                             <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
                             <button id="verificarClienteBtn"
                                 class="btn btn-primary"><strong>Verificar/SHIFT+V</strong></button>
@@ -140,6 +140,7 @@
                     </div>
                 </div>
             </div>
+            
         </div>
 
         <!-- Itens da Venda -->
@@ -193,6 +194,9 @@
     <div class="fixed-bottom text-center mb-4">
         <div class="container">
             <div class="row justify-content-center">
+
+                
+
                 {% if venda.id %}
                 <div class="col-md-auto">
                     <form method="post" action="{% url 'pdvweb:cancelar_venda' venda.id %}" class="d-inline ml-2">
@@ -310,6 +314,16 @@
             }
         });
 
+        function rolarParaUltimoItem() {
+            console.log("TABELA FUNCIONANDO");
+            var tabela = $('#itens-da-venda');
+            var alturaTabela = tabela[0].scrollHeight - tabela[0].offsetHeight;
+            console.log(alturaTabela);
+            tabela.animate({
+                scrollTop: alturaTabela
+            }, 500);
+        }
+        
 
 
         // Script para adicionar item à venda
@@ -334,6 +348,8 @@
                         // Atualize a seção do HTML que exibe o valor total da venda
                         $('#valor_total_venda').text(data.valor_total_venda);
                         window.location.reload(); // Se necessário
+                        rolarParaUltimoItem();
+                        
                     },
                     error: function (error) {
                         console.log('Erro ao adicionar item à venda:', error);
@@ -353,6 +369,7 @@
                         // Atualize a seção do HTML que exibe o valor total da venda
                         $('#valor_total_venda').text(data.valor_total_venda);
                         window.location.reload(); // Se necessário
+                        rolarParaUltimoItem();
                     },
                     error: function (error) {
                         console.log('Erro ao adicionar item à venda:', error);
@@ -361,6 +378,7 @@
             }
         });
 
+        
 
 
 
@@ -492,7 +510,7 @@
                         focusInput('#codigo_produto_base');
                         break;
                     case 'Q':
-                        focusInput('#nome_cliente');
+                        focusInput('#cpf_cliente');
                         break;
                     case 'V':
                         clickButton('#verificarClienteBtn');
