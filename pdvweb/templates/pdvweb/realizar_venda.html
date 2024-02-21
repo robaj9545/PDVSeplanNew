@@ -146,48 +146,51 @@
         <!-- Itens da Venda -->
         <div class="col-md-9">
             <!-- Itens da Venda -->
-            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded"
-                style="max-height: 400px; overflow-y: auto;">
-                <h2 class="mb-3 text-center">Itens da Venda</h2>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
+            <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
+                
+                
+                    <table style="max-height: 350px;" class="table text-center" >
+                        <thead class="sticky-top bg-light">
+                            
                             <tr>
-                                <th scope="col">Produto</th>
+                                <th class="text-left col-auto text-wrap" scope="col">Produto</th>
                                 <th scope="col">Quantidade/Peso</th>
                                 <th scope="col">Preço Unitário</th>
                                 <th scope="col">Subtotal</th>
                                 <th scope="col">Ação</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="max-height: 350px;">
                             {% for item in itens_venda %}
                             <tr>
-                                <td>
+                                <td class="text-left col-auto text-wrap">
                                     {% if item.produto_por_quantidade %}
                                     {{ item.produto_por_quantidade.nome }}
                                     {% else %}
                                     {{ item.produto_por_peso.nome }}
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td class="col-auto text-wrap">
                                     {% if item.quantidade %}
                                     {{ item.quantidade }}
                                     {% else %}
                                     {{ item.peso_vendido }} kg
                                     {% endif %}
                                 </td>
-                                <td>R$ {{ item.preco_unitario }}</td>
-                                <td>R$ {{ item.subtotal }}</td>
-                                <td id="remove"><a href="{% url 'pdvweb:remover_item' item.id %}"
-                                        class="btn btn-danger btn-sm"><strong>Remover</strong></a></td>
+                                <td class="col-auto text-wrap">R$ {{ item.preco_unitario }}</td>
+                                <td class="col-auto text-wrap">R$ {{ item.subtotal }}</td>
+                                <td id="remove" class="col-auto text-wrap">
+                                    <a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm"><strong>Remover</strong></a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
+                        
                     </table>
-                </div>
+                
             </div>
         </div>
+
     </div>
 
     <!-- Footer PDV -->
@@ -315,7 +318,7 @@
         });
 
         function rolarParaUltimoItem() {
-            console.log("TABELA FUNCIONANDO");
+            console.log("ROLANDO A TABELA FUNCIONANDO");
             var tabela = $('#itens-da-venda');
             var alturaTabela = tabela[0].scrollHeight - tabela[0].offsetHeight;
             console.log(alturaTabela);
@@ -347,8 +350,8 @@
                         console.log('Item adicionado à venda com sucesso.');
                         // Atualize a seção do HTML que exibe o valor total da venda
                         $('#valor_total_venda').text(data.valor_total_venda);
-                        window.location.reload(); // Se necessário
-                        rolarParaUltimoItem();
+                        window.location.reload();
+                        
                         
                     },
                     error: function (error) {
@@ -368,21 +371,23 @@
                         console.log('Item adicionado à venda com sucesso.');
                         // Atualize a seção do HTML que exibe o valor total da venda
                         $('#valor_total_venda').text(data.valor_total_venda);
-                        window.location.reload(); // Se necessário
-                        rolarParaUltimoItem();
+                        window.location.reload();
+                        
+                        
                     },
                     error: function (error) {
                         console.log('Erro ao adicionar item à venda:', error);
                     }
                 });
             }
+            
+            
         });
 
-        
-
-
-
-
+        $(document).ready(function() {
+            // Coloque sua lógica aqui para ser executada após o carregamento da página
+            rolarParaUltimoItem();
+        });
 
         // Função para verificar o cliente e atualizar a interface
         $('#verificarClienteBtn').click(function () {
@@ -549,7 +554,7 @@
     
         // Escute o evento de pressionar uma tecla enquanto a tecla Shift está pressionada
         $(document).on('keydown', function(event) {
-            // Verificar se a tecla Shift + R foi pressionada
+            // Verificar se a tecla Shift foi pressionada
             if (shiftRPressed) {
                 // Verificar se as teclas de seta para cima ou para baixo foram pressionadas
                 if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -559,11 +564,16 @@
                     } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1) {
                         selectedItemIndex++;
                     }
-    
+
                     // Remover a classe 'selected' de todas as linhas da tabela
                     $('#itens-da-venda tbody tr').removeClass('selected');
                     // Adicionar a classe 'selected' à linha do item selecionado
                     $('#itens-da-venda tbody tr').eq(selectedItemIndex).addClass('selected');
+
+                    // Obter a posição da linha selecionada
+                    var selectedRowPosition = $('#itens-da-venda tbody tr').eq(selectedItemIndex).position().top;
+                    // Mover o scroll da tabela para a posição da linha selecionada
+                    $('#itens-da-venda').scrollTop(selectedRowPosition);
                 }
                 // Verificar se a tecla Enter foi pressionada para remover o item selecionado
                 else if (event.which === 13) {
@@ -571,7 +581,7 @@
                         var selectedRow = $('#itens-da-venda tbody tr').eq(selectedItemIndex);
                         var removeButton = selectedRow.find('#remove a'); // Seleciona o botão "Remover"
                         var removeUrl = removeButton.attr('href'); // Obtém a URL de remoção do item
-    
+
                         // Envie uma solicitação AJAX para remover o item da venda
                         $.ajax({
                             type: 'GET',
@@ -594,6 +604,7 @@
                 }
             }
         });
+
     
         // Função para mover o foco para um elemento de entrada e selecionar seu conteúdo
         function focusInput(selector) {
