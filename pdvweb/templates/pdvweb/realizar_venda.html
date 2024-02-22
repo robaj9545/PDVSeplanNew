@@ -49,8 +49,9 @@
                         <div class="form-group">
                             <label for="codigo_produto_base"><strong>Código do Produto:/SHIFT+A</strong></label>
                             <input type="text" class="form-control" id="codigo_produto_base"
-                                name="codigo_produto_base"><strong id="nome_produto"></strong>
-
+                                name="codigo_produto_base">
+                                <br>
+                                    <strong id="nome_produto" class="" style="color: green;"></strong>
                         </div>
 
                         <div id="formulario_quantidade" style="display: none;">
@@ -78,20 +79,20 @@
                 <div class="card-body full-width-card-body d-flex justify-content-center align-items-centery">
                     <div class="form-group">
                         <label for="operador"><strong>Operador:</strong></label>
-                        <strong>{{ request.user }}</strong>
+                        <strong style="color: green;">{{ request.user }}</strong>
                     </div>
                     <br>
                     <div class="form-group ms-3">
                         <label for="cliente"><strong>Cliente:/SHIFT+Q</strong></label>
                         <div class="">
                             {% if venda.cliente %}
-                            <span id="nome_cliente_label ms-2"><strong>{{ venda.cliente.nome }}</strong></span>
-                            <button id="trocarClienteBtn" class="btn btn-secondary "><strong>Trocar/SHIFT+T</strong></button>
+                            <span id="nome_cliente_label ms-2" style="color: green;"><strong>{{ venda.cliente.nome }}</strong></span>
+                            <button id="trocarClienteBtn" class="btn btn-secondary p-1"><strong>Trocar/SHIFT+T</strong></button>
                             {% else %}
                             <!--<input type="text" id="nome_cliente" class="form-control mr-2" placeholder="Nome">-->
                             <input type="text" id="cpf_cliente" class="form-control mr-2" placeholder="CPF">
                             <button id="verificarClienteBtn"
-                                class="btn btn-primary"><strong>Verificar/SHIFT+V</strong></button>
+                                class="btn btn-primary p-1"><strong>Verificar/SHIFT+V</strong></button>
                             {% endif %}
                         </div>
                     </div>
@@ -147,48 +148,46 @@
         <div class="col-md-9">
             <!-- Itens da Venda -->
             <div id="itens-da-venda" class="mb-3 shadow p-3 bg-light rounded" style="max-height: 400px; overflow-y: auto;">
-                
-                
-                    <table style="max-height: 350px;" class="table text-center" >
-                        <thead class="sticky-top bg-light">
-                            
-                            <tr>
-                                <th class="text-left col-auto text-wrap" scope="col">Produto</th>
-                                <th scope="col">Quantidade/Peso</th>
-                                <th scope="col">Preço Unitário</th>
-                                <th scope="col">Subtotal</th>
-                                <th scope="col">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody style="max-height: 350px;">
-                            {% for item in itens_venda %}
-                            <tr>
-                                <td class="text-left col-auto text-wrap">
-                                    {% if item.produto_por_quantidade %}
-                                    {{ item.produto_por_quantidade.nome }}
-                                    {% else %}
-                                    {{ item.produto_por_peso.nome }}
-                                    {% endif %}
-                                </td>
-                                <td class="col-auto text-wrap">
-                                    {% if item.quantidade %}
-                                    {{ item.quantidade }}
-                                    {% else %}
-                                    {{ item.peso_vendido }} kg
-                                    {% endif %}
-                                </td>
-                                <td class="col-auto text-wrap">R$ {{ item.preco_unitario }}</td>
-                                <td class="col-auto text-wrap">R$ {{ item.subtotal }}</td>
-                                <td id="remove" class="col-auto text-wrap">
-                                    <a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm"><strong>Remover</strong></a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        
-                    </table>
-                
-            </div>
+                <table class="table table-horizontal-borders table-sm text-center" >
+                    <thead class="sticky-top bg-light">
+                        <tr>
+                            <th class="border rounded p-1 bg-secondary text-black text-center col-auto text-wrap" scope="col">Produto</th>
+                            <th class="border rounded p-1 bg-secondary text-black text-center col-auto text-wrap" scope="col">Quantidade/Peso</th>
+                            <th class="border rounded p-1 bg-secondary text-black text-center col-auto text-wrap" scope="col">Preço Unitário</th>
+                            <th class="border rounded p-1 bg-secondary text-black text-center col-auto text-wrap" scope="col">Subtotal</th>
+                            <th class="border rounded p-1 bg-secondary text-red text-center col-auto text-wrap" scope="col">Ação</th>
+                        </tr>
+                    </thead>
+                    <br>
+                    <br>
+                    
+                    <tbody class="table-sm" >
+                        {% for item in itens_venda %}
+                        <tr>
+                            <td class="text-left col-auto text-wrap">
+                                {% if item.produto_por_quantidade %}
+                                {{ item.produto_por_quantidade.nome }}
+                                {% else %}
+                                {{ item.produto_por_peso.nome }}
+                                {% endif %}
+                            </td>
+                            <td class="col-auto text-wrap">
+                                {% if item.quantidade %}
+                                {{ item.quantidade }}
+                                {% else %}
+                                {{ item.peso_vendido }} kg
+                                {% endif %}
+                            </td>
+                            <td class="col-auto text-wrap">R$ {{ item.preco_unitario }}</td>
+                            <td class="col-auto text-wrap">R$ {{ item.subtotal }}</td>
+                            <td id="remove" class="col-auto text-wrap">
+                                <a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm"><strong>Remover</strong></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>            
         </div>
 
     </div>
@@ -197,8 +196,6 @@
     <div class="fixed-bottom text-center mb-4">
         <div class="container">
             <div class="row justify-content-center">
-
-                
 
                 {% if venda.id %}
                 <div class="col-md-auto">
@@ -210,12 +207,12 @@
                 <div class="col-md-auto">
                     <form method="post" action="{% url 'pdvweb:finalizar_venda' venda.id %}" class="d-inline ml-2">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary"><strong>Finalizar Venda/SHIFT+F</strong></button>
+                        <button type="submit" class="btn btn-success"><strong>Finalizar Venda/SHIFT+F</strong></button>
                     </form>
                 </div>
                 {% endif %}
                 <div class="col-md-auto mt-2">
-                    <strong class="border border-primary rounded p-2 bg-primary text-white">Total: R$ <span
+                    <strong class="border rounded p-2 bg-secondary text-white" >Total: R$ <span
                             id="valor_total_venda">{{ valor_total_venda }}</span></strong>
                 </div>
             </div>
@@ -318,7 +315,7 @@
         });
 
         function rolarParaUltimoItem() {
-            console.log("ROLANDO A TABELA FUNCIONANDO");
+            console.log("");
             var tabela = $('#itens-da-venda');
             var alturaTabela = tabela[0].scrollHeight - tabela[0].offsetHeight;
             console.log(alturaTabela);
@@ -532,6 +529,7 @@
                     case 'R':
                         // Ativar a funcionalidade de selecionar e remover os itens
                         shiftRPressed = true;
+                        
                         break;
                     default:
                         break;
@@ -561,7 +559,7 @@
                     // Atualizar o índice do item selecionado
                     if (event.key === 'ArrowUp' && selectedItemIndex > 0) {
                         selectedItemIndex--;
-                    } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1) {
+                    } else if (event.key === 'ArrowDown' && selectedItemIndex < $('#itens-da-venda tbody tr').length - 1 ) {
                         selectedItemIndex++;
                     }
 
@@ -595,6 +593,7 @@
                                 selectedItemIndex = -1;
                                 // Remover a classe 'selected' de todas as linhas da tabela
                                 $('#itens-da-venda tbody tr').removeClass('selected');
+                                window.location.reload();
                             },
                             error: function(error) {
                                 console.log('Erro ao remover o item da venda:', error);
@@ -632,6 +631,18 @@
         color: #fff;
         /* Cor do texto branco */
     }
+
+    .table-bordered {
+        border-width: 0px; /* Ajuste o tamanho conforme necessário */
+        border-style: ; /* Garante que as bordas sejam exibidas como sólidas */
+    }
+
+    .table-horizontal-borders tbody > tr > td {
+        border-top: 3px solid #dee2e6;
+        border-bottom: 3px solid #dee2e6;
+    }
+
+    
 </style>
 
 
