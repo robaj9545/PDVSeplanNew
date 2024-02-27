@@ -12,6 +12,16 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import os
+from dotenv import load_dotenv
+
+# Carrega variáveis de ambiente de .env
+load_dotenv()
+
+# Acesse suas variáveis de ambiente
+WHATSAPP_TOKEN = os.getenv('WHATSAPP_TOKEN')
+VERIFY_TOKEN = os.getenv('VERIFY_TOKEN')
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +52,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'widget_tweaks',
     'pdvweb',
+    'whatsapp',
 ]
 
 
@@ -66,7 +77,7 @@ ROOT_URLCONF = 'portfolioDjango.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'pdvweb', 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'pdvweb', 'templates', 'whatsapp')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
