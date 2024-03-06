@@ -19,7 +19,8 @@ PC DA SEPLAN
 venvSeplan\Scripts\activate
 
 EXTRAIR REQUERIMENTOS DO PROJETO
-pip freeze > requirements.txt
+
+
 pip install -r requirements.txt
 
 
