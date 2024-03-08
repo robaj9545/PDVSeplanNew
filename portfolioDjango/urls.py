@@ -3,7 +3,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('whatsapp/', include('whatsapp.urls')),
-    path('pdvweb/', include('pdvweb.urls')),
+    path('', include('pdvweb.urls')),
     path('admin/', admin.site.urls),
 ]
 #
