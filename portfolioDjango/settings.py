@@ -21,6 +21,7 @@ load_dotenv()
 # Acesse suas variáveis de ambiente
 WHATSAPP_TOKEN = os.getenv('WHATSAPP_TOKEN')
 VERIFY_TOKEN = os.getenv('VERIFY_TOKEN')
+TOKEN_GERAL = os.getenv('TOKEN_GERAL')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
