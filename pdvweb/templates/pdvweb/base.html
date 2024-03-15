@@ -40,6 +40,8 @@
         </div>
 
         {% block content %}{% endblock %}
+
+
     </div>
 
 
@@ -67,12 +69,30 @@
                 window.history.back();
             }
         }
+
+        function verificarWhatsApp() {
+            
+            window.location.href = "https://wa.me/5586995142638";
+            alert("Redirecionando para o WhatsApp...");
+        }
     </script>
+
+
+    <header>
+        <h1>Verificação WhatsApp Empresa</h1>
+    </header>
+    <main>
+        <p>Site associado à empresa ROBERTO MARQUES ARAUJO.</p>
+        <p>Por favor, clique no botão abaixo para ir ao WhatsApp da empresa:</p>
+        <button onclick="verificarWhatsApp()">WhatsApp</button>
+    </main>
+
+    <footer>
+        <p>© 2024 ROBERTO MARQUES ARAUJO.</p>
+    </footer>
 </body>
 
-<footer>
-    <p>© 2024 ROBERTO MARQUES ARAUJO. Todos os direitos reservados.</p>
-</footer>
+
 
 
 </html>
