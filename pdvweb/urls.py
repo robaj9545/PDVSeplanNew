@@ -33,6 +33,7 @@ urlpatterns = [
     path('historico_vendas/', views.historico_vendas, name='historico_vendas'),
     path('detalhes_venda/<int:venda_id>/',
          views.detalhes_venda, name='detalhes_venda'),
+    path('gerar_pdf_venda/<int:venda_id>/', views.gerar_pdf_venda, name='gerar_pdf_venda'),
     path('verificar_cliente/<int:venda_id>/',
          views.verificar_cliente, name='verificar_cliente'),
     path('desvincular_cliente/<int:venda_id>/',

@@ -13,6 +13,7 @@
       <th>Valor Total</th>
       <th>Desconto</th>
       <th>Detalhes</th>
+      <th>Gerar PDF</th>
     </tr>
   </thead>
   <tbody>
@@ -26,6 +27,7 @@
       <td>R$ {{ venda.valor_total }}</td>
       <td>R$ {{ venda.desconto }}</td>
       <td><a href="{% url 'pdvweb:detalhes_venda' venda.id %}" class="btn btn-primary">Detalhes</a></td>
+      <td><a href="{% url 'pdvweb:gerar_pdf_venda' venda.id %}" class="btn btn-secondary">Gerar PDF</a></td>
     </tr>
     {% endfor %}
   </tbody>

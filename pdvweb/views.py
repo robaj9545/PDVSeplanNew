@@ -18,6 +18,7 @@ from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
+from .utils import generate_pdf_venda
 
 
 def is_operador(user):
@@ -246,6 +247,10 @@ def detalhes_venda(request, venda_id):
     itens_venda = venda.itemvenda_set.all()
     return render(request, 'pdvweb/detalhes_venda.html', {'venda': venda, 'itens_venda': itens_venda})
 
+def gerar_pdf_venda(request, venda_id):
+    venda = get_object_or_404(Venda, pk=venda_id)
+    pdf_response = generate_pdf_venda(venda)
+    return pdf_response
 
 def verificar_cliente(request, venda_id):
     if request.method == 'POST':
