@@ -28,6 +28,9 @@ def is_operador(user):
 def index(request):
     return render(request, 'pdvweb/index.html')
 
+def verifyforzoho(request):
+    return render(request, 'pdvweb/verifyforzoho.html')
+
 
 @login_required
 def listar_produtos(request):
