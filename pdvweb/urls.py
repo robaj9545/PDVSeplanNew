@@ -9,6 +9,8 @@ app_name = 'pdvweb'
 urlpatterns = [
     # INDEX
     path('', views.index, name='index'),
+    path('zohoverify/', views.verifyforzoho, name='verifyforzoho'),
+    
 
     # PRODUTOS
     path('produtos/', views.listar_produtos, name='listar_produtos'),
