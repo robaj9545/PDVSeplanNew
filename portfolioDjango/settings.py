@@ -36,8 +36,8 @@ SECRET_KEY = 'django-insecure--o1z(q(6b9u889yg=rlqen5fo)9%!x_si13$0evm^jghgdq=$z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '127.0.0.1', 'whats-app-394f8910c20c.herokuapp.com']
-CSRF_TRUSTED_ORIGINS = ['https://127.0.0.1', 'https://whats-app-394f8910c20c.herokuapp.com']
+ALLOWED_HOSTS = [ '127.0.0.1', 'whats-app-394f8910c20c.herokuapp.com', 'whats-app.desenvolvimentora.site', 'desenvolvimentora.site']
+CSRF_TRUSTED_ORIGINS = ['https://127.0.0.1', 'https://whats-app-394f8910c20c.herokuapp.com', 'http://desenvolvimentora.site', 'https://desenvolvimentora.site', 'http://whats-app.desenvolvimentora.site', 'https://whats-app.desenvolvimentora.site']
 
 
 # Application definition
