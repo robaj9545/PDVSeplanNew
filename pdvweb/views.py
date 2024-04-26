@@ -252,8 +252,10 @@ def desvincular_caixa(request):
 @login_required
 def selecionar_caixa(request):
     operador_atual = request.user.operador
-    caixas_disponiveis = Caixa.objects.exclude(operador=operador_atual)
+    caixas_disponiveis = Caixa.objects.filter(operador__isnull=True)
 
+    print(operador_atual)
+    
     if request.method == 'POST':
         caixa_id = request.POST.get('caixa_id')
         caixa_selecionado = Caixa.objects.get(id=caixa_id)

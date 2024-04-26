@@ -140,6 +140,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    # Adicione outros backends, se necessário
+]
+
 
 
 STATIC_URL = '/static/'  # Corrigido o caminho do diretório estático
