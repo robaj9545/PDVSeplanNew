@@ -52,4 +52,8 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout_view'),
     path('dashboard-operador/', views.operador_dashboard,
          name='operador_dashboard'),
+    
+    # CAIXA
+    path('selecionar_caixa/', views.selecionar_caixa, name='selecionar_caixa'),
+    path('desvincular_caixa/', views.desvincular_caixa, name='desvincular_caixa'),
 ]

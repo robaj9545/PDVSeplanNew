@@ -1,0 +1,20 @@
+
+{% extends 'pdvweb/base.html' %}
+
+{% block title %}Página Inicial{% endblock %}
+
+{% block content %}
+<h1>Selecionar Caixa</h1>
+<form method="post">
+    {% csrf_token %}
+    <select name="caixa_id">
+        {% for caixa in caixas_disponiveis %}
+            <option value="{{ caixa.id }}">{{ caixa.nome }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Selecionar</button>
+</form>
+{% endblock %}
+
+
+

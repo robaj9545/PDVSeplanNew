@@ -3,13 +3,20 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .models import Categoria, Cliente, Operador, CustomUser, CustomGroup, ProdutoPorQuantidade, ProdutoPorPeso, Venda, ItemVenda
-from .forms import VendaForm
+from .models import Categoria, Cliente, Operador, CustomUser, CustomGroup, ProdutoPorQuantidade, ProdutoPorPeso, Venda, ItemVenda, Caixa
+from .forms import VendaForm, CaixaForm
 
 
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ['nome']
     search_fields = ['nome']
+    
+
+class CaixaAdmin(admin.ModelAdmin):
+    form = CaixaForm
+    list_display = ['nome', 'numero_caixa', 'status', 'operador', 'venda']
+    search_fields = ['nome', 'numero_caixa', 'status']
+    list_filter = ['status']
 
 
 class ClienteAdmin(admin.ModelAdmin):
@@ -18,7 +25,7 @@ class ClienteAdmin(admin.ModelAdmin):
 
 
 class OperadorAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'email', 'telefone']
+    list_display = ['nome', 'email', 'telefone', 'caixasoperador']
     search_fields = ['nome', 'email']
 
 
@@ -49,7 +56,7 @@ class ItemVendaInline(admin.TabularInline):
 
 
 class VendaAdmin(admin.ModelAdmin):
-    list_display = ['id', 'data', 'status', 'valor_total', 'desconto']
+    list_display = ['id', 'data', 'status', 'valor_total', 'desconto', 'caixasvenda']
     search_fields = ['id', 'status']
     list_filter = ['status']
     inlines = [ItemVendaInline]
@@ -63,3 +70,4 @@ admin.site.register(CustomGroup, CustomGroupAdmin)
 admin.site.register(ProdutoPorQuantidade, ProdutoPorQuantidadeAdmin)
 admin.site.register(ProdutoPorPeso, ProdutoPorPesoAdmin)
 admin.site.register(Venda, VendaAdmin)
+admin.site.register(Caixa, CaixaAdmin)

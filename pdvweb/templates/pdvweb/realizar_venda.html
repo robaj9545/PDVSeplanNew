@@ -74,6 +74,33 @@
                 </div>
             </div>
 
+
+            <!-- Operador e Caixa -->
+            <div class="card mb-3">
+                <div class="card-body full-width-card-body d-flex justify-content-between align-items-center">
+                    <div class="form-group">
+                        <label for="operador"><strong>Operador:</strong></label>
+                        <strong style="color: green;">{{ request.user.operador }}</strong>  <!-- Corrigido para exibir o operador -->
+                    </div>
+                    {% if not operador_atual.caixasoperador %}
+                    <div class="form-group">
+                        <h1>Nenhum Caixa Vinculado</h1>
+                    </div>
+                    {% else %}
+                    <div class="form-group">
+                        <label for="caixa"><strong>Caixa Vinculado:</strong></label><br>
+                        <strong style="color: green;">{{ caixa_atual.numero_caixa }} - {{ caixa_atual.status }}</strong>  <!-- Corrigido para exibir o número do caixa selecionado -->
+                        <form method="post" action="{% url 'pdvweb:desvincular_caixa' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger mt-2"><strong>Desvincular Caixa</strong></button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+
+
             <!-- Operador e Cliente -->
             <div class="card mb-3">
                 <div class="card-body full-width-card-body d-flex justify-content-center align-items-centery">
@@ -391,6 +418,9 @@
             var nomeCliente = $('#nome_cliente').val();
             var cpfCliente = $('#cpf_cliente').val();
 
+            console.log(cpfCliente);
+            console.log(nomeCliente);
+
             $.ajax({
                 type: 'POST',
                 url: '{% url "pdvweb:verificar_cliente" venda.id %}',
@@ -399,6 +429,7 @@
                     'cpf_cliente': cpfCliente,
                     'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
                 },
+                
                 success: function (data) {
                     if (data.success) {
                         console.log(data);
@@ -419,6 +450,8 @@
                 error: function (error) {
                     console.log(error);
                 }
+
+                
             });
         });
 

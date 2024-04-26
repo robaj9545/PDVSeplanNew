@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
-from .models import Venda, CustomUser, Operador, Cliente, ItemVenda, ProdutoPorPeso, ProdutoPorQuantidade, ProdutoPorPeso
+from .models import Venda, CustomUser, Operador, Cliente, ItemVenda, ProdutoPorPeso, ProdutoPorQuantidade, ProdutoPorPeso, Caixa
 from .forms import RegistroOperadorForm, LoginOperadorForm, ClienteForm, VendaItemPorQuantidadeForm, VendaItemPorPesoForm, ProdutoPorQuantidadeForm, ProdutoPorPesoForm
 from django.db import transaction
 from itertools import chain
@@ -144,13 +144,36 @@ def verificar_tipo_produto(request):
     return JsonResponse({'tipo_produto': 'produto_nao_encontrado'})
 
 
+
 @login_required
 def realizar_venda(request):
-    venda = Venda.objects.filter(status=Venda.STATUS_PENDENTE).first()
+    operador_atual = request.user.operador
+    
+    if operador_atual.caixasoperador is None:
+        # Se o operador não estiver vinculado a nenhum caixa, redireciona para selecionar caixa
+        return redirect('pdvweb:selecionar_caixa')
+
+    # Obtém o objeto Caixa correspondente ao ID da sessão
+    caixa_selecionado = Caixa.objects.get(id=operador_atual.caixasoperador.id)
+    #print(caixa_selecionado)
+    
+    
+    # Obter a última venda pendente do caixa selecionado
+    venda = Venda.objects.filter(caixasvenda=operador_atual.caixasoperador.id, status=Venda.STATUS_PENDENTE).first()
+    
+    
+
+    # Se não houver uma venda pendente, cria uma nova
     if venda is None:
         venda = Venda.objects.create(status=Venda.STATUS_PENDENTE)
-
-    operador_atual = request.user.operador
+        venda.caixasvenda = caixa_selecionado
+        caixa_selecionado.venda = venda
+        caixa_selecionado.operador = operador_atual
+        venda.operador = operador_atual
+        caixa_selecionado.save()
+        venda.save()
+        
+        
 
     if request.method == 'POST':
         if 'quantidade' in request.POST:
@@ -181,18 +204,74 @@ def realizar_venda(request):
                 return JsonResponse({'valor_total_venda': venda.valor_total})
 
     itens_venda = venda.itemvenda_set.all()
+    
+    caixa_atual = operador_atual.caixasoperador
 
     context = {
         'venda': venda,
         'itens_venda': itens_venda,
         'valor_total_venda': venda.valor_total,
+        'caixa_atual': caixa_atual,
+        'operador_atual': operador_atual, 
     }
-
-    venda.operador = operador_atual
-    venda.save()
 
     return render(request, 'pdvweb/realizar_venda.html', context)
 
+
+@login_required
+def desvincular_caixa(request):
+    operador_atual = request.user.operador
+    # Obter a última venda pendente do caixa selecionado
+    venda = Venda.objects.filter(caixasvenda=operador_atual.caixasoperador.id, status=Venda.STATUS_PENDENTE).first()
+    caixa_selecionado = Caixa.objects.get(id=operador_atual.caixasoperador.id)
+    
+    #print(venda.operador)
+
+    if request.method == 'POST':
+        
+        
+        if venda.valor_total <= 0:
+            # Vincula o operador ao caixa selecionado
+            operador_atual.caixasoperador = None
+            caixa_selecionado.venda = None
+            caixa_selecionado.operador = None
+            venda.status = 'cancelada'
+            operador_atual.save()
+            caixa_selecionado.save()
+            venda.save()
+            
+            # Redireciona de volta para a página de realizar venda
+            return redirect('pdvweb:realizar_venda')
+        
+        else:
+            messages.success(request, "erro: Finalize a venda pendente no caixa!")
+
+            # Redireciona de volta para a página de realizar venda
+            return redirect('pdvweb:realizar_venda')
+
+@login_required
+def selecionar_caixa(request):
+    operador_atual = request.user.operador
+    caixas_disponiveis = Caixa.objects.exclude(operador=operador_atual)
+
+    if request.method == 'POST':
+        caixa_id = request.POST.get('caixa_id')
+        caixa_selecionado = Caixa.objects.get(id=caixa_id)
+        
+        # Vincula o operador ao caixa selecionado
+        operador_atual.caixasoperador = caixa_selecionado
+        operador_atual.save()
+        
+        messages.success(request, "Caixa selecionado com sucesso!")
+
+        # Redireciona de volta para a página de realizar venda
+        return redirect('pdvweb:realizar_venda')
+
+    context = {
+        'caixas_disponiveis': caixas_disponiveis
+    }
+
+    return render(request, 'pdvweb/selecionar_caixa.html', context)
 
 @login_required
 def remover_item(request, item_id):
@@ -259,10 +338,17 @@ def verificar_cliente(request, venda_id):
     if request.method == 'POST':
         nome_cliente = request.POST.get('nome_cliente')
         cpf_cliente = request.POST.get('cpf_cliente')
+        
+        #print(cpf_cliente)
+        
         if nome_cliente:
             cliente = Cliente.objects.filter(nome__iexact=nome_cliente).first()
         elif cpf_cliente:
             cliente = Cliente.objects.filter(cpf=cpf_cliente).first()
+            #print(cliente)
+        else:
+            print('NADA ENCONTRADO!')
+        
 
         if cliente:
             venda = get_object_or_404(Venda, id=venda_id)

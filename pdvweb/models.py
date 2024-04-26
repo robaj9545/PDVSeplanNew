@@ -14,6 +14,26 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nome
+    
+    
+    
+class Caixa(models.Model):
+    nome = models.CharField(max_length=255)
+    numero_caixa = models.CharField(max_length=20)
+    STATUS_ABERTO = 'aberto'
+    STATUS_FECHADO = 'fechado'
+    STATUS_CHOICES = [
+        (STATUS_ABERTO, 'Aberto'),
+        (STATUS_FECHADO, 'Fechado'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ABERTO)
+    operador = models.ForeignKey('Operador', on_delete=models.SET_NULL, blank=True, null=True)
+    venda = models.ForeignKey('Venda', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.nome} - {self.numero_caixa} ({self.get_status_display()})'
+    
+    
 
 
 class Cliente(models.Model):
@@ -33,6 +53,7 @@ class Operador(models.Model):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     usuarios = models.ManyToManyField(
         'CustomUser', related_name='operadores', blank=True)
+    caixasoperador = models.ForeignKey('Caixa', related_name='caixasoperador', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return self.nome
@@ -201,6 +222,7 @@ class Venda(models.Model):
         'Operador', on_delete=models.SET_NULL, null=True)
     cliente = models.ForeignKey(
         'Cliente', on_delete=models.SET_NULL, null=True)
+    caixasvenda = models.ForeignKey('Caixa', related_name='caixasvenda', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return f'Venda {self.id} - {self.data} ({self.get_status_display()})'

@@ -2,12 +2,17 @@
 
 from django import forms
 from django.contrib.auth.models import AbstractUser, Group
-from .models import ProdutoPorQuantidade, ProdutoPorPeso, Venda, Categoria, CustomUser, Operador, Cliente, ProdutoBase
+from .models import ProdutoPorQuantidade, ProdutoPorPeso, Venda, Categoria, CustomUser, Operador, Cliente, ProdutoBase, Caixa
 from .models import CustomUser
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
 
+
+class CaixaForm(forms.ModelForm):
+    class Meta:
+        model = Caixa
+        fields = ['nome', 'numero_caixa', 'status', 'operador', 'venda']
 
 class ClienteForm(forms.ModelForm):
     class Meta:
