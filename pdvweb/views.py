@@ -275,6 +275,61 @@ def selecionar_caixa(request):
 
     return render(request, 'pdvweb/selecionar_caixa.html', context)
 
+
+def editar_valor_item(request, item_id):
+    item_venda = get_object_or_404(ItemVenda, id=item_id)
+    
+    if request.method == 'POST':
+        novo_valor_str = request.POST.get('valor_item')
+        
+        # Trocar a vírgula pelo ponto
+        novo_valor_str = novo_valor_str.replace(',', '.')
+        
+        print(novo_valor_str)
+        # Tratar e transformar a variável novo_valor em Decimal
+        try:
+            novo_valor = Decimal(novo_valor_str)
+        except ValueError:
+            # Se não for possível converter para Decimal, redirecionar de volta à página de edição
+            return redirect(reverse('pdvweb:realizar_venda'))
+        
+        print(novo_valor)
+
+        # Salvar o valor original do produto associado ao item
+        valor_original = None
+        if item_venda.produto_por_quantidade:
+            valor_original = item_venda.produto_por_quantidade.preco
+        elif item_venda.produto_por_peso:
+            valor_original = item_venda.produto_por_peso.preco_por_kilo
+
+        if item_venda.produto_por_quantidade:
+            item_venda.produto_por_quantidade.preco = novo_valor
+            item_venda.produto_por_quantidade.save()
+        elif item_venda.produto_por_peso:
+            item_venda.produto_por_peso.preco_por_kilo = novo_valor
+            item_venda.produto_por_peso.save()
+
+        item_venda.save()
+
+        # Restaurar o valor original do produto ao renderizar o template novamente
+        if valor_original is not None:
+            if item_venda.produto_por_quantidade:
+                item_venda.produto_por_quantidade.preco = valor_original
+                item_venda.produto_por_quantidade.save()
+            elif item_venda.produto_por_peso:
+                item_venda.produto_por_peso.preco_por_kilo = valor_original
+                item_venda.produto_por_peso.save()
+
+        # Calcular o valor total da venda após a edição do preço do item
+        venda = item_venda.venda
+        venda.calcular_valor_total()
+        print(item_venda.preco_unitario)
+
+    return redirect(reverse('pdvweb:realizar_venda'))
+
+
+
+
 @login_required
 def remover_item(request, item_id):
     item_venda = get_object_or_404(ItemVenda, id=item_id)

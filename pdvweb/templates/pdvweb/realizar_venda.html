@@ -210,12 +210,41 @@
                             <td id="remove" class="col-auto text-wrap">
                                 <a href="{% url 'pdvweb:remover_item' item.id %}" class="btn btn-danger btn-sm"><strong>Remover</strong></a>
                             </td>
+                            <td class="col-auto text-wrap">
+                                <button class="btn btn-primary p-1" data-bs-toggle="modal" data-bs-target="#editarValorModal{{ item.id }}"><strong>Editar</strong></button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>            
+            </div> 
         </div>
+
+        <!-- Modais para Editar Valor do Item -->
+        {% for item in itens_venda %}
+        <div class="modal fade" id="editarValorModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Editar Valor do Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editarValorForm{{ item.id }}" method="post" action="{% url 'pdvweb:editar_valor_item' item.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="valor_item"><strong>Novo Valor:</strong></label>
+                                <input type="text" class="form-control" id="valor_item{{ item.id }}" name="valor_item" placeholder="Novo Valor" value="{{ item.preco_unitario }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary"><strong>Confirmar</strong></button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><strong>Fechar</strong></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
 
     </div>
 
@@ -260,6 +289,22 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
+
+
+        
+
+        // Adicione um evento de clique ao botão de editar valor do item
+        $('#editarValor').on('click', function () {
+
+            $('#valor_item').val(''); // Limpa o valor do campo de pesquisa
+            $('#editarValorModal').modal('show');
+            $('#editarValorForm').focus();
+        });
+
+
+
+
+        
 
 
         // Script para abrir a janela modal de pesquisa

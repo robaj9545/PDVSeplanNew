@@ -30,6 +30,7 @@ urlpatterns = [
     path('cancelar_venda/<int:venda_id>/',
          views.cancelar_venda, name='cancelar_venda'),
     path('remover_item/<int:item_id>/', views.remover_item, name='remover_item'),
+    path('editar_valor_item/<int:item_id>/', views.editar_valor_item, name='editar_valor_item'),
     path('aplicar_desconto/<int:venda_id>/',
          views.aplicar_desconto, name='aplicar_desconto'),
     path('historico_vendas/', views.historico_vendas, name='historico_vendas'),

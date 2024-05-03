@@ -302,8 +302,10 @@ class ItemVenda(models.Model):
             self.subtotal = self.quantidade * self.preco_unitario
         elif self.produto_por_peso:
             self.preco_unitario = self.produto_por_peso.preco_por_kilo
-            self.subtotal = self.peso_vendido * self.preco_unitario
+            if self.peso_vendido is not None and self.preco_unitario is not None:
+                self.subtotal = self.peso_vendido * self.preco_unitario
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f'Subtotal: {self.subtotal}'
